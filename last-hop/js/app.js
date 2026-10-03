@@ -50,11 +50,14 @@
     : `<kbd class="${k.length > 2 ? 'wide' : ''}">${esc(k)}</kbd>`).join('');
   // Card titles: an address and its prefix may break only before the slash, never inside a number.
   const titleHtml = t => esc(t).replace(/(\d+(?:\.\d+){3})(\/\d+)?/g, (m, ip, pre) => `<span class="nb">${ip}</span>${pre ? `<wbr><span class="nb">${pre}</span>` : ''}`);
-  // Ignore a click that lands on a control which appeared under the pointer a moment ago (a double-click).
+  // Ignore a pointer click that lands on a control which appeared under the pointer a moment ago (a double-click).
+  // Keyboard and shortcut clicks have detail 0 and always go through.
   let swapAt = 0;
-  const markSwap = () => { swapAt = performance.now(); };
-  const fresh = e => e.detail > 1 || performance.now() - swapAt < 300;
-  const focusInView = el => { if (!el) return; el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest' }); };
+  const markSwap = () => { swapAt = performance.now(); pointerMoved = false; };
+  const fresh = e => e.detail > 1 || (e.detail === 1 && performance.now() - swapAt < 300);
+  // On touch screens nothing is pre-selected: a highlighted first answer would read as already chosen.
+  const touch = () => window.matchMedia('(hover: none), (pointer: coarse)').matches;
+  const autoFocus = el => { if (el && !touch()) el.focus({ preventScroll: true }); };
 
   /** One rating badge for every screen. m = { a, c, recent[] } */
   function badge(m) {
@@ -84,13 +87,14 @@
   function setTab(name) {
     $$('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.tab === name ? 'page' : 'false'));
   }
-  function show(name, html, prompts) {
+  function show(name, html, prompts, keepScroll) {
     stopTimer();
     document.body.dataset.screen = name;
     screen.innerHTML = html;
     setPrompts(prompts);
     $('#match-ctl').innerHTML = '';
-    window.scrollTo(0, 0);
+    if (!keepScroll) window.scrollTo(0, 0);
+    markSwap();
   }
   function syncSound() {
     const b = $('#sound');
@@ -109,8 +113,13 @@
   }
 
   // One selection cursor: hovering a control moves focus to it, so mouse and keyboard never highlight two things.
+  // Only a pointer that really moved counts; content re-rendering under a resting pointer must not steal focus.
+  let pointerMoved = false, lastX = -1, lastY = -1;
+  document.addEventListener('pointermove', e => {
+    if (e.clientX !== lastX || e.clientY !== lastY) { pointerMoved = true; lastX = e.clientX; lastY = e.clientY; }
+  });
   document.addEventListener('pointerover', e => {
-    if (e.pointerType !== 'mouse') return;
+    if (e.pointerType !== 'mouse' || !pointerMoved) return;
     const el = e.target.closest('#screen .btn, .tile, button.ccard, .choice, .item, .pool-item, .seq-item, button.tline, button.rule, .dom-row summary');
     const active = document.activeElement;
     if (!el || el === active || el.disabled) return;
@@ -127,7 +136,7 @@
       ? `<span class="cc-art">${LHArena.portrait()}</span>`
       : `<span class="cc-log" aria-hidden="true">${(b.log || []).map(esc).join('<br>')}</span>`;
     const stats = b.available
-      ? `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span><span><b>${bank.length}</b>Qs</span><span><b>${b.weakPoints.length}</b>Weak</span>`
+      ? `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span><span><b>${bank.length}</b>Questions</span>`
       : `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span>`;
     const tag = b.available ? 'button' : 'div';
     return `<${tag} class="ccard ${tier}" ${b.available ? `data-boss="${b.id}"` : 'role="img"'} aria-label="${esc(b.name)}, ${b.weight}% of the exam${b.available ? '' : ', locked'}">
@@ -216,7 +225,7 @@
     $('#t-mastery').addEventListener('click', mastery);
     $('#t-guide').addEventListener('click', guide);
     $$('.roster button.ccard').forEach(c => c.addEventListener('click', () => setup(c.dataset.boss, 'run')));
-    $('#t-play').focus({ preventScroll: true });
+    autoFocus($('#t-play'));
   }
 
   /* ================================================================
@@ -265,12 +274,12 @@
           </div>
         </div>
       </section>`,
-      [['↵', 'Select'], [['←', '→'], 'Change mode'], ['Esc', 'Back']]);
+      [['↵', 'Select'], [['←', '→'], 'Change mode'], ['Esc', 'Back']], !!focusOn);
     setTab('match');
     $('#mode').addEventListener('click', () => { sfx.select(); setup(id, practice ? 'run' : 'practice', 'mode'); });
     $('#kickoff').addEventListener('click', () => battle(id, mode));
     $('#back').addEventListener('click', home);
-    focusInView($(focusOn === 'mode' ? '#mode' : '#kickoff'));
+    autoFocus($(focusOn === 'mode' ? '#mode' : '#kickoff'));
   }
 
   /* ================================================================
@@ -403,11 +412,13 @@
       ? `<span class="wp-chip found">${w}</span>`
       : '<span class="wp-chip" aria-label="hidden">?</span>').join('');
     const it = run.items;
-    $('#items').innerHTML = run.practice
-      ? `<button class="item" id="it-pcap">Packet Capture <b>∞</b></button><button class="item" id="it-tac">TAC Case <b>∞</b></button>`
-      : `<button class="item" id="it-pcap" ${it.pcap > 0 ? '' : 'disabled'}>Packet Capture <b>×${it.pcap}</b></button>
-         <button class="item" id="it-tac" ${it.tac > 0 ? '' : 'disabled'}>TAC Case <b>×${it.tac}</b></button>
-         <span class="item passive" title="Offered right after a miss">Reload <b>×${it.reload}</b></span>`;
+    const open = current && !current.done;
+    const pcapOk = open && (current.q.choices || current.q.type === 'output') && it.pcap > 0;
+    const tacOk = open && !hintShown && it.tac > 0;
+    const n = v => v === Infinity ? '∞' : `×${v}`;
+    $('#items').innerHTML = `<button class="item" id="it-pcap" ${pcapOk ? '' : 'disabled'}>Packet Capture <b>${n(it.pcap)}</b></button>
+      <button class="item" id="it-tac" ${tacOk ? '' : 'disabled'}>TAC Case <b>${n(it.tac)}</b></button>
+      ${run.practice ? '' : `<span class="item passive" title="Offered right after a miss">Reload <b>×${it.reload}</b></span>`}`;
     $('#it-pcap').addEventListener('click', usePcap);
     $('#it-tac').addEventListener('click', useTac);
     LHArena.update({ hpFrac: run.hpFrac, nines: run.nines, phase: run.phase, startNines: START_NINES, floorNines: FLOOR_NINES });
@@ -468,14 +479,14 @@
             ${weak ? '<span class="cc-badge inline">Weak point</span>' : ''}
             <span class="cc-title">${titleHtml(q.title)}</span>
             <span class="cc-obj">${q.obj} ${esc(objName(q.obj))}</span>
-            <span class="cc-stats"><span><b>${q.diff}</b>Diff</span><span><b>${yourRating(q.obj)}</b>You</span></span>
+            <span class="cc-stats"><span><b>${q.diff}</b>Diff</span><span><b>${yourRating(q.obj)}</b>Rating</span></span>
           </span>
         </button>`;
       }).join('')}</div>`;
     $$('#console .ccard').forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; sfx.select(); ask(cards[+b.dataset.i]); }));
     $('#console').scrollTop = 0;
     markSwap();
-    $('#console .ccard').focus({ preventScroll: true });
+    autoFocus($('#console .ccard'));
     setPrompts([[cards.length > 1 ? ['1', '2', '3'] : ['1'], 'Pick card'], [['←', '→'], 'Move'], ['↵', 'Select']]);
   }
 
@@ -508,6 +519,7 @@
     // Only advertise keys that work here: the answer box takes every letter on Calculate questions.
     const items = q.type === 'calc' ? [] : (q.choices || q.type === 'output') ? [['X', 'Packet Capture'], ['H', 'TAC Case']] : [['H', 'TAC Case']];
     setPrompts([...legend, ...items]);
+    hud();
   }
 
   function renderBody() {
@@ -518,7 +530,7 @@
         <button class="choice" data-oi="${oi}" ${eliminated.has(oi) ? 'disabled aria-label="Removed by Packet Capture"' : ''}>
           <span class="slot-key">${'ABCD'[n]}</span><span>${esc(q.choices[oi].t)}</span></button>`).join('')}</div>`;
       $$('.choice', body).forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; submit(+b.dataset.oi === q.answer, { pick: +b.dataset.oi }); }));
-      const first = $('.choice:not(:disabled)', body); if (first) first.focus({ preventScroll: true });
+      autoFocus($('.choice:not(:disabled)', body));
     } else if (q.type === 'output') {
       body.innerHTML = terminal(q, { selectable: true }) +
         `<div class="row"><button class="btn primary" id="flag" ${current.picked === null ? 'disabled' : ''}>Flag line</button></div>`;
@@ -543,7 +555,7 @@
         </form>
         <p class="calc-msg" id="calc-msg">Type your answer. Any valid format counts.</p>`;
       const input = $('#calc-input');
-      input.focus({ preventScroll: true });
+      autoFocus(input);
       $('#calc').addEventListener('submit', e => {
         e.preventDefault();
         const v = input.value;
@@ -578,7 +590,7 @@
     if (hintShown) { const h = $('#hint'); h.hidden = false; h.innerHTML = `<b>TAC Case</b><span>${esc(hintShown)}</span>`; }
   }
   function focusFirst(...sels) {
-    for (const s of sels) { const el = $(`#qbody ${s}:not(:disabled)`); if (el) { el.focus({ preventScroll: true }); return; } }
+    for (const s of sels) { const el = $(`#qbody ${s}:not(:disabled)`); if (el) { autoFocus(el); return; } }
   }
   function flag() { if (current && !current.done && current.picked !== null) submit(current.q.answer.includes(current.picked), { pick: current.picked }); }
   function lockIn() { if (current && !current.done && current.seq.length === current.q.items.length) submit(current.seq.every((v, n) => v === n), { seq: current.seq.slice() }); }
@@ -603,7 +615,7 @@
   function usePcap() {
     if (!current || current.done) return;
     const q = current.q;
-    if (!(q.choices || q.type === 'output')) { flash('Packet Capture works on multiple-choice and terminal questions.'); return; }
+    if (!(q.choices || q.type === 'output')) return;
     const out = run.capture(q);
     if (!out) return;
     out.forEach(i => eliminated.add(i));
@@ -630,7 +642,6 @@
     if (run.over) { stopTimer(); results(); return; }
     refocus();
   }
-  function flash(msg) { const h = $('#hint'); if (h) { h.hidden = false; h.textContent = msg; } }
 
   /* ---------- timer (phase 3) ---------- */
   function startTimer(sec) {
@@ -730,12 +741,13 @@
       <p class="prompt-text small">${esc(q.prompt)}</p>
       ${review}
       <p class="explain"><b>Why:</b> ${esc(q.explain)}</p>
-      <div class="row">
+      <div class="row actions">
         <button class="btn primary" id="next">${run.over ? 'Full time' : 'Continue'}</button>
         ${canReload ? `<button class="btn" id="reload">Undo miss (Reload ×${run.items.reload})</button>` : ''}
       </div>`;
     $('#console').scrollTop = 0;
-    focusInView($('#next'));
+    autoFocus($('#next'));
+    hud();
     $('#next').addEventListener('click', () => run.over ? results() : choose());
     if (canReload) $('#reload').addEventListener('click', doReload);
     setPrompts(canReload ? [['↵', run.over ? 'Full time' : 'Continue'], ['R', 'Undo miss']] : [['↵', run.over ? 'Full time' : 'Continue']]);
@@ -825,7 +837,7 @@
     $('#other').addEventListener('click', () => setup(boss.id, practice ? 'run' : 'practice'));
     $('#m').addEventListener('click', mastery);
     $('#r').addEventListener('click', home);
-    focusInView($('#again'));
+    autoFocus($('#again'));
   }
 
   /* ================================================================
@@ -849,7 +861,7 @@
         <div class="attr-side">
           <span class="ccard static ${ovr === null ? 'locked' : ovr >= 80 ? 'gold' : ovr >= 50 ? 'silver' : 'bronze'}" role="img" aria-label="Overall rating ${ovr === null ? 'not rated yet' : ovr}">
             <span class="cc-face">
-              <span class="cc-top"><span class="cc-rating">${ovr === null ? 'New' : ovr}</span><span class="cc-unit">OVR</span></span>
+              <span class="cc-top"><span class="cc-rating">${ovr === null ? 'New' : ovr}</span><span class="cc-unit">Overall</span></span>
               <span class="cc-art"><span class="crest">NOC</span></span>
               <span class="cc-name">On-call</span>
               <span class="cc-stats"><span><b>${tested}</b>Tested</span><span><b>${solid}</b>Solid</span><span><b>${wins}</b>Wins</span></span>
@@ -894,13 +906,13 @@
   }
 
   /* ---------- keyboard: controller-style ---------- */
-  const LIST_GROUPS = ['.choice', '.seq-item, .pool-item, #commit', 'button.tline, #flag', 'button.rule, #kickoff, #back', '.tile, .roster button.ccard', '#console .ccard', '.dom-row summary', '#console .row .btn'];
+  const LIST_GROUPS = ['.choice', '.seq-item, .pool-item, #commit', 'button.tline, #flag', 'button.rule, #kickoff, #back', '.tile, .roster button.ccard', '#console .ccard', '.dom-row summary, #reset, #reset-yes, #reset-no', '#console .actions .btn', '.ft-actions .btn'];
   function moveFocus(dir) {
     const a = document.activeElement;
     const group = a && LIST_GROUPS.find(g => a.matches(g));
     if (!group) {
-      const first = $(`#qbody .choice:not(:disabled), #qbody .pool-item, #qbody button.tline, #console .ccard`);
-      if (first) { first.focus({ preventScroll: false }); return true; }
+      // Nothing selected yet: start at the first control of the first list on screen.
+      for (const g of LIST_GROUPS) { const el = $$(g).find(x => !x.disabled); if (el) { el.focus(); return true; } }
       return false;
     }
     const els = $$(group).filter(e => !e.disabled);
@@ -919,7 +931,7 @@
       sfx.select(); go(next); e.preventDefault(); return;
     }
     if (k === 'Escape' && scr !== 'battle' && scr !== 'home') { home(); e.preventDefault(); return; }
-    if (scr === 'setup' && (k === 'ArrowLeft' || k === 'ArrowRight')) { sfx.select(); setup('mask', setup.mode === 'practice' ? 'run' : 'practice'); e.preventDefault(); return; }
+    if (scr === 'setup' && (k === 'ArrowLeft' || k === 'ArrowRight')) { sfx.select(); setup('mask', setup.mode === 'practice' ? 'run' : 'practice', 'kickoff'); e.preventDefault(); return; }
     if (k === 'ArrowDown' || k === 'ArrowUp') { if (moveFocus(k === 'ArrowDown' ? 1 : -1)) e.preventDefault(); return; }
     if (scr !== 'battle') return;
     if ((k === 'ArrowLeft' || k === 'ArrowRight') && document.activeElement && document.activeElement.matches('#console .ccard')) { moveFocus(k === 'ArrowRight' ? 1 : -1); e.preventDefault(); return; }

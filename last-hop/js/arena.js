@@ -102,7 +102,7 @@
     el('rect', { x: 400, y: 0, width: 600, height: 470, class: 'corrupt-zone' }, bg);
     el('line', { x1: 400, y1: 10, x2: 400, y2: 460, class: 'front' }, bg);
     el('text', { x: 16, y: 22, class: 'zone-label' }, bg).textContent = 'YOUR NETWORK';
-    el('text', { x: 984, y: 22, class: 'zone-label', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
+    el('text', { x: 984, y: 22, class: 'zone-label far', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
 
     const lg = el('g', { class: 'links' }, svg);
     const ng = el('g', { class: 'nodes' }, svg);
