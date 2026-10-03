@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LAST HOP</title>
+<meta name="description" content="A CCNA 200-301 boss-fight game. Repair the network by answering exam questions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="menu">
+<!--BODY-->
+<div id="app">
+  <header class="topbar">
+    <a href="#" id="home" class="brand" aria-label="LAST HOP, back to roster"><span class="brand-mark" aria-hidden="true"></span>LAST HOP</a>
+    <span class="topbar-sub">CCNA 200-301 · incident response</span>
+    <button class="btn ghost small" id="sound" aria-pressed="false">Sound off</button>
+  </header>
+  <main id="screen"><section class="menu"><p class="lede">Loading the question bank…</p></section></main>
+</div>
+<!--/BODY-->
+<script src="js/engine.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

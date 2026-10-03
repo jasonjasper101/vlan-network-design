@@ -16,3 +16,7 @@ ranges, and broadcast addresses for each, then configured the network to match.
 
 ## Files
 - Lab report (docx) with subnetting table and configuration steps
+
+## LAST HOP: CCNA boss-fight game
+
+[`last-hop/`](last-hop/) is a browser game that turns CCNA 200-301 study into boss fights. Each boss is one exam domain, with health sized to its blueprint weight. The first boss, The Mask (Network Fundamentals: subnetting, IPv6, cabling, switching), is playable with 49 tagged questions. See [last-hop/README.md](last-hop/README.md) to run it or add questions.

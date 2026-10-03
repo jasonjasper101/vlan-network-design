@@ -1,0 +1,28 @@
+{
+  "bosses": [
+    {
+      "id": "mask",
+      "name": "The Mask",
+      "domain": "1.0",
+      "weight": 20,
+      "available": true,
+      "questions": "data/questions/fundamentals.json",
+      "theme": "Hides real boundaries",
+      "weakPoints": ["1.6", "1.9", "1.4", "1.10"],
+      "lines": {
+        "intro": "Every boundary you trust is a lie. Your /24 is whatever I say it is.",
+        "phase2": "You found the edge of one subnet. There are sixty-three more where that came from.",
+        "phase3": "No more counting on your fingers. Prove the math, on the clock.",
+        "crit": "You see through me...",
+        "win": "The boundary... was real.",
+        "lose": "Uptime breached SLA. The Mask redraws your network."
+      }
+    },
+    { "id": "loop", "name": "The Loop", "domain": "2.0", "weight": 20, "available": false, "theme": "Broadcast storm" },
+    { "id": "blackhole", "name": "The Black Hole", "domain": "3.0", "weight": 25, "available": false, "theme": "Routes vanish" },
+    { "id": "rogue", "name": "The Rogue", "domain": "4.0", "weight": 10, "available": false, "theme": "Fake DHCP, NAT confusion" },
+    { "id": "intruder", "name": "The Intruder", "domain": "5.0", "weight": 15, "available": false, "theme": "ACLs, port security, AAA" },
+    { "id": "script", "name": "The Script", "domain": "6.0", "weight": 10, "available": false, "theme": "Controllers, REST, JSON" },
+    { "id": "outage", "name": "The Outage", "domain": "all", "weight": 0, "available": false, "theme": "Adapts to your weak spots" }
+  ]
+}

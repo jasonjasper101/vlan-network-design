@@ -1,0 +1,699 @@
+{
+  "domain": "1.0",
+  "questions": [
+    {
+      "id": "nf-001", "obj": "1.6", "type": "calc", "diff": 1,
+      "title": "Usable hosts in a /27",
+      "prompt": "How many usable host addresses does a /27 subnet provide?",
+      "kind": "number", "answer": "30",
+      "hint": "Host bits = 32 minus the prefix length. Usable = 2^hostbits - 2.",
+      "explain": "A /27 leaves 32 - 27 = 5 host bits. 2^5 = 32 addresses, minus the network and broadcast addresses, gives 30 usable."
+    },
+    {
+      "id": "nf-002", "obj": "1.6", "type": "calc", "diff": 1,
+      "title": "Network ID of 192.168.10.77/26",
+      "prompt": "Type the network address of the subnet that contains 192.168.10.77/26.",
+      "kind": "ipv4", "answer": "192.168.10.64",
+      "hint": "Block size = 256 minus the interesting octet of the mask. /26 is 255.255.255.192.",
+      "explain": "/26 = 255.255.255.192, so the block size in the 4th octet is 256 - 192 = 64. Subnets start at .0, .64, .128 and .192. 77 falls between .64 and .127, so the network is 192.168.10.64."
+    },
+    {
+      "id": "nf-003", "obj": "1.6", "type": "calc", "diff": 1,
+      "title": "/28 as a dotted mask",
+      "prompt": "Type the dotted-decimal subnet mask for a /28.",
+      "kind": "ipv4", "answer": "255.255.255.240",
+      "hint": "28 one-bits = 8 + 8 + 8 + 4. What are four 1-bits worth in one octet?",
+      "explain": "28 one-bits fill three octets (24 bits) and the top 4 bits of the last octet: 128 + 64 + 32 + 16 = 240. The mask is 255.255.255.240."
+    },
+    {
+      "id": "nf-004", "obj": "1.7", "type": "recall", "diff": 1,
+      "title": "Spot the RFC 1918 address",
+      "prompt": "Which address is an RFC 1918 private address?",
+      "choices": [
+        { "t": "172.31.200.5", "why": "" },
+        { "t": "172.32.0.1", "why": "172.16.0.0/12 runs from 172.16.0.0 to 172.31.255.255. 172.32.x.x is one block past the end and is public." },
+        { "t": "169.254.10.10", "why": "169.254.0.0/16 is link-local (APIPA). Hosts assign it to themselves when DHCP fails. It is not one of the RFC 1918 ranges." },
+        { "t": "100.64.0.1", "why": "100.64.0.0/10 is shared address space for carrier-grade NAT (RFC 6598), not RFC 1918." }
+      ],
+      "answer": 0,
+      "hint": "The middle private block is 172.16.0.0/12. Work out where a /12 ends.",
+      "explain": "The RFC 1918 ranges are 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 to 172.31.255.255) and 192.168.0.0/16. 172.31.200.5 is inside the /12."
+    },
+    {
+      "id": "nf-005", "obj": "1.5", "type": "recall", "diff": 1,
+      "title": "What TCP has that UDP lacks",
+      "prompt": "Which feature does TCP provide that UDP does not?",
+      "choices": [
+        { "t": "Acknowledgments and retransmission of lost segments", "why": "" },
+        { "t": "Source and destination port numbers", "why": "Both TCP and UDP use port numbers to identify applications. That is how DNS (UDP 53) and HTTPS (TCP 443) are told apart." },
+        { "t": "A checksum over the header and data", "why": "UDP has a checksum too. In IPv4 it is optional, and in IPv6 it is mandatory." },
+        { "t": "A smaller header", "why": "That is UDP's advantage. The UDP header is 8 bytes. The TCP header is at least 20 bytes." }
+      ],
+      "answer": 0,
+      "hint": "Think about what happens when a segment is lost.",
+      "explain": "TCP is connection-oriented and reliable. It sequences data, acknowledges it and retransmits what is lost. UDP sends and forgets, which suits voice, video and DNS queries."
+    },
+    {
+      "id": "nf-006", "obj": "1.3", "type": "recall", "diff": 1,
+      "title": "Cable for a 10 km run",
+      "prompt": "Two buildings are 10 km apart. Which media fits a single Ethernet link between them?",
+      "choices": [
+        { "t": "Single-mode fiber", "why": "" },
+        { "t": "OM4 multimode fiber", "why": "Multimode's wide core causes modal dispersion. At 10 Gbps it reaches roughly 400 m, nowhere near 10 km." },
+        { "t": "Cat 6a twisted pair", "why": "Copper twisted pair Ethernet is limited to 100 m per segment." },
+        { "t": "Cat 8 twisted pair", "why": "Cat 8 is built for 25/40 Gbps inside data centers and only reaches about 30 m." }
+      ],
+      "answer": 0,
+      "hint": "Distance in kilometers rules out copper. Which fiber has the narrow core?",
+      "explain": "Single-mode fiber has a small (about 9 micron) core and uses laser light, so a single path of light travels kilometers. Multimode is for runs inside a building or campus."
+    },
+    {
+      "id": "nf-007", "obj": "1.1", "type": "recall", "diff": 1,
+      "title": "Who splits broadcast domains",
+      "prompt": "Which device separates broadcast domains by default?",
+      "choices": [
+        { "t": "Router", "why": "" },
+        { "t": "Layer 2 switch", "why": "Each switch port is its own collision domain, but the whole switch (per VLAN) is one broadcast domain. Broadcasts flood out every port." },
+        { "t": "Hub", "why": "A hub repeats bits out every port. The whole hub is one collision domain and one broadcast domain." },
+        { "t": "Autonomous access point", "why": "An AP bridges wireless clients onto the wired LAN, so they share the same broadcast domain." }
+      ],
+      "answer": 0,
+      "hint": "Broadcasts stop at Layer 3.",
+      "explain": "Routers do not forward Layer 2 broadcasts. Every router interface is its own broadcast domain."
+    },
+    {
+      "id": "nf-008", "obj": "1.9", "type": "recall", "diff": 1,
+      "title": "Link-local prefix",
+      "prompt": "Which prefix identifies an IPv6 link-local unicast address?",
+      "choices": [
+        { "t": "FE80::/10", "why": "" },
+        { "t": "FC00::/7", "why": "FC00::/7 is unique local (ULA). It is IPv6's version of private addressing, routable inside a site." },
+        { "t": "2000::/3", "why": "2000::/3 is global unicast, the publicly routable space." },
+        { "t": "FF00::/8", "why": "FF00::/8 is multicast. IPv6 has no broadcast and uses multicast instead." }
+      ],
+      "answer": 0,
+      "hint": "Every IPv6 interface has one, and the router shows it starting with FE80.",
+      "explain": "Link-local addresses use FE80::/10. They are never routed, are created automatically on every IPv6 interface, and are used as next hops and for NDP."
+    },
+    {
+      "id": "nf-009", "obj": "1.13", "type": "recall", "diff": 1,
+      "title": "Unknown unicast frame",
+      "prompt": "A switch receives a frame whose destination MAC is not in its MAC address table. What does it do?",
+      "choices": [
+        { "t": "Floods it out every port in the same VLAN except the one it arrived on", "why": "" },
+        { "t": "Drops the frame", "why": "Switches don't drop unknown unicast. They flood it so the destination can answer and be learned." },
+        { "t": "Sends an ARP request for the destination", "why": "ARP maps IP to MAC and is done by hosts and routers. A Layer 2 switch forwarding a frame doesn't look at IP." },
+        { "t": "Floods it out every port, including the one it arrived on", "why": "A switch never sends a frame back out its ingress port. The sender already has it." }
+      ],
+      "answer": 0,
+      "hint": "The switch can't know where the host is until it hears from it.",
+      "explain": "Unknown unicast is flooded within the VLAN, excluding the incoming port. When the destination replies, the switch learns its MAC from the source field and forwards later frames out one port."
+    },
+    {
+      "id": "nf-010", "obj": "1.11", "type": "recall", "diff": 1,
+      "title": "Non-overlapping 2.4 GHz channels",
+      "prompt": "In North America, which set of 2.4 GHz channels do not overlap?",
+      "choices": [
+        { "t": "1, 6, 11", "why": "" },
+        { "t": "1, 4, 8, 11", "why": "These are only 3 channels (15 MHz) apart. 2.4 GHz channels are 22 MHz wide and need 5 channels (25 MHz) of separation." },
+        { "t": "2, 7, 12", "why": "Channel 12 is not normally used in North America, and this plan wastes channel 1." },
+        { "t": "36, 40, 44", "why": "Those are 5 GHz channels." }
+      ],
+      "answer": 0,
+      "hint": "Channels are 5 MHz apart but each is about 22 MHz wide.",
+      "explain": "With 22 MHz-wide channels spaced 5 MHz apart, you need a gap of 5 channel numbers. Channels 1, 6 and 11 are the only three that fit in North America's channels 1 to 11."
+    },
+    {
+      "id": "nf-011", "obj": "1.12", "type": "recall", "diff": 1,
+      "title": "Containers vs virtual machines",
+      "prompt": "Compared with virtual machines, containers:",
+      "choices": [
+        { "t": "Share the host operating system's kernel", "why": "" },
+        { "t": "Each include a full guest operating system", "why": "That describes virtual machines. Each VM runs its own guest OS on a hypervisor." },
+        { "t": "Require a Type 1 hypervisor", "why": "Containers run on a container engine (for example, Docker) on top of a host OS. No hypervisor is required." },
+        { "t": "Provide stronger isolation than VMs", "why": "Because containers share a kernel, their isolation is generally weaker than a VM's hardware-level isolation." }
+      ],
+      "answer": 0,
+      "hint": "Why do containers start in milliseconds while VMs take a minute?",
+      "explain": "Containers package an application and its dependencies but share the host kernel. That makes them lightweight and fast to start, at the cost of weaker isolation than VMs."
+    },
+    {
+      "id": "nf-012", "obj": "1.2", "type": "recall", "diff": 1,
+      "title": "Spine-leaf wiring",
+      "prompt": "Which statement about a spine-leaf architecture is true?",
+      "choices": [
+        { "t": "Every leaf switch connects to every spine switch", "why": "" },
+        { "t": "Servers connect to the spine switches", "why": "Endpoints connect to leaves. Spines only interconnect leaves." },
+        { "t": "Leaf switches connect to each other in a full mesh", "why": "Leaves never connect to other leaves. Leaf-to-leaf traffic always crosses exactly one spine." },
+        { "t": "Spine switches connect to each other", "why": "Spines don't interconnect. Adding capacity means adding a spine that every leaf connects to." }
+      ],
+      "answer": 0,
+      "hint": "The design goal is that any server is the same number of hops from any other.",
+      "explain": "In spine-leaf, each leaf connects to every spine, and nothing else connects in between. Any two endpoints on different leaves are always leaf-spine-leaf apart, which keeps latency predictable."
+    },
+    {
+      "id": "nf-013", "obj": "1.3", "type": "recall", "diff": 1,
+      "title": "PC to PC, no Auto-MDIX",
+      "prompt": "Two older PCs without Auto-MDIX need to be cabled directly together. Which cable works?",
+      "choices": [
+        { "t": "Crossover", "why": "" },
+        { "t": "Straight-through", "why": "Straight-through connects transmit to transmit between two like devices. It works PC to switch, not PC to PC, without Auto-MDIX." },
+        { "t": "Rollover", "why": "A rollover (console) cable connects a PC's serial port to a Cisco console port. It isn't an Ethernet data cable." },
+        { "t": "Single-mode fiber patch", "why": "Standard PC NICs have RJ-45 copper ports, not fiber." }
+      ],
+      "answer": 0,
+      "hint": "Like devices need their transmit pairs swapped.",
+      "explain": "Like devices (PC to PC, switch to switch, router to PC) transmit on the same pins, so the pairs must cross. Auto-MDIX does this in hardware on modern gear."
+    },
+    {
+      "id": "nf-014", "obj": "1.1", "type": "recall", "diff": 1,
+      "title": "Inline and blocking",
+      "prompt": "Which component sits inline in the traffic path and drops packets that match attack signatures?",
+      "choices": [
+        { "t": "IPS", "why": "" },
+        { "t": "IDS", "why": "An IDS watches a copy of traffic (from a SPAN port or tap) and raises alerts. It is not inline, so it can't drop packets." },
+        { "t": "Wireless LAN controller", "why": "A WLC manages lightweight APs. It is not a signature-based inspection device." },
+        { "t": "Layer 2 switch", "why": "A switch forwards frames by MAC address and doesn't inspect payloads for attack signatures." }
+      ],
+      "answer": 0,
+      "hint": "Detection only versus prevention.",
+      "explain": "An intrusion prevention system sits inline, so it can block traffic as it inspects it. An IDS only detects and alerts."
+    },
+    {
+      "id": "nf-015", "obj": "1.5", "type": "order", "diff": 1,
+      "title": "TCP three-way handshake",
+      "prompt": "Put the start of a TCP session in order.",
+      "items": [
+        "Client sends SYN",
+        "Server replies with SYN-ACK",
+        "Client sends ACK",
+        "Client sends the first data segment"
+      ],
+      "hint": "Each side has to open its own direction and have it acknowledged.",
+      "explain": "SYN, then SYN-ACK, then ACK. The server's SYN-ACK acknowledges the client's SYN and opens the server's direction at the same time. Data only flows after the final ACK."
+    },
+    {
+      "id": "nf-016", "obj": "1.6", "type": "calc", "diff": 2,
+      "title": "Broadcast of 172.16.45.200/21",
+      "prompt": "Type the broadcast address of the subnet that contains 172.16.45.200/21.",
+      "kind": "ipv4", "answer": "172.16.47.255",
+      "hint": "/21 puts the interesting octet in the 3rd position. Block size = 256 - 248.",
+      "explain": "/21 = 255.255.248.0, block size 8 in the 3rd octet: 32, 40, 48 and so on. 45 falls in 40 to 47. The network is 172.16.40.0 and the broadcast is the last address, 172.16.47.255."
+    },
+    {
+      "id": "nf-017", "obj": "1.6", "type": "calc", "diff": 2,
+      "title": "Gateway for 10.10.10.192/27",
+      "prompt": "The HR subnet is 10.10.10.192/27. The router uses the last usable address as the gateway. Type it.",
+      "kind": "ipv4", "answer": "10.10.10.222",
+      "hint": "A /27 is a block of 32. Find the broadcast, then step back one.",
+      "explain": "A /27 has 32 addresses: .192 to .223. .223 is the broadcast, so the last usable host (the gateway) is 10.10.10.222."
+    },
+    {
+      "id": "nf-018", "obj": "1.6", "type": "calc", "diff": 2,
+      "title": "Smallest subnet for 52 hosts",
+      "prompt": "Marketing needs 52 hosts. What is the longest prefix (smallest subnet) that fits? You can type it as /n or as a dotted mask.",
+      "kind": "mask", "answer": "26",
+      "hint": "Add 2 for the network and broadcast addresses, then round up to a power of two.",
+      "explain": "52 + 2 = 54 addresses needed. The next power of two is 64 = 2^6, so 6 host bits: /26 (255.255.255.192). A /27 only gives 30 usable."
+    },
+    {
+      "id": "nf-019", "obj": "1.6", "type": "calc", "diff": 2,
+      "title": "VLSM: where HR lands",
+      "prompt": "VLSM on 10.10.10.0/24, allocated largest first with no gaps: Sales 110 hosts, Marketing 52, HR 23. Type HR's network address.",
+      "kind": "ipv4", "answer": "10.10.10.192",
+      "hint": "Size each department, then lay them down biggest first from .0.",
+      "explain": "Sales needs a /25: 10.10.10.0 to .127. Marketing needs a /26: 10.10.10.128 to .191. HR needs a /27 (23 + 2 fits in 32) and starts at the next free address: 10.10.10.192/27."
+    },
+    {
+      "id": "nf-020", "obj": "1.6", "type": "scenario", "diff": 2,
+      "title": "PC can't leave its subnet",
+      "prompt": "A PC is set to 192.168.1.130 /25 with default gateway 192.168.1.1. It can ping hosts in its own subnet but nothing beyond it. What is wrong?",
+      "choices": [
+        { "t": "The gateway is in a different subnet from the PC", "why": "" },
+        { "t": "A /25 mask is not valid on a 192.168.x.x network", "why": "Addressing is classless. Any prefix length can be used on any range, so a /25 here is fine." },
+        { "t": ".130 is the broadcast address of the subnet", "why": "The PC's subnet is 192.168.1.128/25, and its broadcast is .255. .130 is a valid host." },
+        { "t": "The PC needs a DNS server configured", "why": "DNS resolves names. It doesn't stop the PC from pinging an IP address off-subnet." }
+      ],
+      "answer": 0,
+      "hint": "Work out which /25 the PC is in, then which /25 the gateway is in.",
+      "explain": "192.168.1.130/25 is in 192.168.1.128/25 (.129 to .254). The gateway 192.168.1.1 is in 192.168.1.0/25. A host can only use a gateway in its own subnet, so the gateway should be in .129 to .254."
+    },
+    {
+      "id": "nf-021", "obj": "1.10", "type": "output", "diff": 2,
+      "title": "Windows host with no network",
+      "prompt": "A Windows user can't reach anything, not even the gateway. Click the line that shows the host never got a DHCP lease.",
+      "terminal": {
+        "prompt": "C:\\>",
+        "cmd": "ipconfig",
+        "lines": [
+          "Windows IP Configuration",
+          "",
+          "Ethernet adapter Ethernet0:",
+          "",
+          "   Connection-specific DNS Suffix  . :",
+          "   Link-local IPv6 Address . . . . . : fe80::4c1a:7f2e:9b3d:12a8%12",
+          "   Autoconfiguration IPv4 Address. . : 169.254.88.17",
+          "   Subnet Mask . . . . . . . . . . . : 255.255.0.0",
+          "   Default Gateway . . . . . . . . . :"
+        ]
+      },
+      "answer": [6],
+      "lineWhy": {
+        "5": "Every IPv6-enabled interface creates an FE80:: link-local address by itself. It says nothing about DHCP.",
+        "7": "255.255.0.0 is the mask that goes with APIPA, but the mask alone could be a valid static setting. The 169.254 address is the proof.",
+        "8": "An empty gateway is a symptom, but a static configuration could also leave it blank. The 169.254 address is what proves DHCP failed."
+      },
+      "hint": "Look for the range a host assigns to itself.",
+      "explain": "\"Autoconfiguration IPv4 Address\" with a 169.254.x.x address is APIPA. Windows assigns it to itself after DHCP discovery fails. Next, check the cable, the switch port VLAN, the DHCP server or the ip helper-address."
+    },
+    {
+      "id": "nf-022", "obj": "1.4", "type": "output", "diff": 2,
+      "title": "Marketing gateway unreachable",
+      "prompt": "Marketing hosts (10.10.10.128/26) can't ping their gateway 10.10.10.190. The cable tests good. Click the line that shows the fault.",
+      "terminal": {
+        "prompt": "R1#",
+        "cmd": "show ip interface brief",
+        "lines": [
+          "Interface              IP-Address      OK? Method Status                Protocol",
+          "GigabitEthernet0/0     10.10.10.126    YES manual up                    up",
+          "GigabitEthernet0/1     10.10.10.190    YES manual administratively down down",
+          "GigabitEthernet0/2     10.10.10.222    YES manual up                    up",
+          "Serial0/0/0            unassigned      YES unset  administratively down down"
+        ]
+      },
+      "answer": [2],
+      "lineWhy": {
+        "1": "Gi0/0 is the Sales gateway (.126), and it is up/up.",
+        "3": "Gi0/2 is the HR gateway (.222), and it is up/up.",
+        "4": "Serial0/0/0 is unused and unaddressed. Being shut down is expected and has nothing to do with Marketing."
+      },
+      "hint": "Find the interface that holds .190.",
+      "explain": "Gi0/1 holds 10.10.10.190 but is \"administratively down\", meaning someone (or the default config) left it shut down. Fix it with interface g0/1 followed by no shutdown."
+    },
+    {
+      "id": "nf-023", "obj": "1.4", "type": "scenario", "diff": 2,
+      "title": "CRC errors climbing",
+      "prompt": "A switchport's input errors and CRC counters keep climbing. Both ends show full duplex, 1000 Mbps, and there are no late collisions. What is the most likely cause?",
+      "choices": [
+        { "t": "A damaged cable or electrical interference on the link", "why": "" },
+        { "t": "A duplex mismatch", "why": "Both ends report full duplex, so there is no mismatch. A mismatch would also show late collisions on the half-duplex side." },
+        { "t": "The port is in the wrong VLAN", "why": "A VLAN mistake breaks reachability, but the frames arrive intact. It doesn't corrupt them or cause CRC errors." },
+        { "t": "An MTU mismatch", "why": "Oversized frames are counted as giants, not CRC errors." }
+      ],
+      "answer": 0,
+      "hint": "CRC means the bits that arrived don't match what was sent.",
+      "explain": "CRC/FCS errors mean frames are being corrupted on the wire. With duplex ruled out, suspect Layer 1: a bad or over-length cable, a bad connector, or EMI from nearby power. Swap the cable first."
+    },
+    {
+      "id": "nf-024", "obj": "1.13", "type": "order", "diff": 2,
+      "title": "Inside the switch",
+      "prompt": "Put a switch's handling of an incoming frame in order.",
+      "items": [
+        "Receive the frame and check the FCS",
+        "Record the source MAC and incoming port in the MAC table",
+        "Look up the destination MAC in the MAC table",
+        "Forward out the matching port, or flood if there is no match"
+      ],
+      "hint": "The switch learns from where frames come from, then decides where they go.",
+      "explain": "The switch accepts the frame, learns (source MAC to port), then looks up the destination and forwards, filters or floods. Learning happens on the source address, never the destination."
+    },
+    {
+      "id": "nf-025", "obj": "1.5", "type": "order", "diff": 2,
+      "title": "TCP graceful close",
+      "prompt": "Host A closes a TCP session with host B. Put the four-way teardown in order.",
+      "items": [
+        "A sends FIN",
+        "B sends ACK",
+        "B sends FIN",
+        "A sends ACK"
+      ],
+      "hint": "Each direction is closed separately, and each FIN needs its own ACK.",
+      "explain": "TCP is full duplex, so each side closes its own direction. A's FIN is acknowledged by B. When B is done sending, it sends its own FIN, which A acknowledges."
+    },
+    {
+      "id": "nf-026", "obj": "1.8", "type": "recall", "diff": 2,
+      "title": "Compress the IPv6 address",
+      "prompt": "What is the correctly compressed form of 2001:0DB8:0000:0000:0A00:0000:0000:0001?",
+      "choices": [
+        { "t": "2001:DB8::A00:0:0:1", "why": "" },
+        { "t": "2001:DB8::A00::1", "why": ":: can appear only once. With two, there is no way to tell how many zero groups each one hides." },
+        { "t": "2001:DB8:0:0:A::1", "why": "Only leading zeros can be dropped from a group. 0A00 becomes A00, not A." },
+        { "t": "2001:DB8::A::1", "why": "This uses :: twice and also shortens 0A00 to A, which drops trailing zeros." }
+      ],
+      "answer": 0,
+      "hint": "Drop leading zeros only. Use :: once, on the first of two equal runs.",
+      "explain": "Drop leading zeros in each group (0DB8 to DB8, 0A00 to A00), then replace one run of all-zero groups with ::. There are two equal runs, and RFC 5952 compresses the first one. 2001:DB8:0:0:A00::1 is also valid, but it isn't the preferred form."
+    },
+    {
+      "id": "nf-027", "obj": "1.9", "type": "calc", "diff": 2,
+      "title": "EUI-64 interface ID",
+      "prompt": "An interface's MAC is 00E0.F71A.2B01. Type the modified EUI-64 interface ID as four colon-separated hex groups.",
+      "kind": "hex", "answer": "02E0:F7FF:FE1A:2B01",
+      "hint": "Split the MAC in half, insert FFFE, then flip the 7th bit of the first byte.",
+      "explain": "Split 00E0F7 | 1A2B01, insert FFFE in the middle: 00E0:F7FF:FE1A:2B01. Then flip the U/L bit (the 7th bit) of the first byte: 0x00 becomes 0x02. The result is 02E0:F7FF:FE1A:2B01."
+    },
+    {
+      "id": "nf-028", "obj": "1.1", "type": "recall", "diff": 2,
+      "title": "Powering a hungry AP",
+      "prompt": "An access point needs 25.5 W delivered at the device. What is the minimum PoE standard the switch must support?",
+      "choices": [
+        { "t": "802.3at (PoE+)", "why": "" },
+        { "t": "802.3af (PoE)", "why": "802.3af supplies 15.4 W at the switch port and guarantees only 12.95 W at the device." },
+        { "t": "802.3ad", "why": "802.3ad is link aggregation (LACP), not Power over Ethernet. It is a classic name mix-up." },
+        { "t": "802.3bt Type 4", "why": "802.3bt Type 4 delivers up to 90 W at the switch. It would work, but the question asks for the minimum." }
+      ],
+      "answer": 0,
+      "hint": "The standard that supplies 30 W at the switch port.",
+      "explain": "802.3at (PoE+) supplies 30 W at the switch port, which leaves 25.5 W at the device after cable loss. That is exactly this AP's budget."
+    },
+    {
+      "id": "nf-029", "obj": "1.7", "type": "calc", "diff": 2,
+      "title": "/24s inside 172.16.0.0/12",
+      "prompt": "How many /24 networks fit inside 172.16.0.0/12?",
+      "kind": "number", "answer": "4096",
+      "hint": "Count the bits between /12 and /24.",
+      "explain": "Going from /12 to /24 borrows 12 bits. 2^12 = 4096 /24 networks (172.16.0.0/24 through 172.31.255.0/24)."
+    },
+    {
+      "id": "nf-030", "obj": "1.13", "type": "recall", "diff": 2,
+      "title": "MAC table aging",
+      "prompt": "What is the default aging time for dynamic MAC address table entries on a Cisco Catalyst switch?",
+      "choices": [
+        { "t": "300 seconds", "why": "" },
+        { "t": "4 hours", "why": "4 hours is the default ARP cache timeout on a Cisco router. It is a common mix-up with MAC aging." },
+        { "t": "60 seconds", "why": "Too short. The Catalyst default is five minutes." },
+        { "t": "Entries never age out", "why": "Only static entries persist. Dynamic entries are removed after the aging timer expires with no frames from that MAC." }
+      ],
+      "answer": 0,
+      "hint": "Five minutes.",
+      "explain": "Dynamic MAC entries age out after 300 seconds (5 minutes) without traffic from that source. Check it with show mac address-table aging-time."
+    },
+    {
+      "id": "nf-031", "obj": "1.13", "type": "output", "diff": 2,
+      "title": "Where is PC-C really?",
+      "prompt": "PC-C (MAC 0050.7966.6803) should be patched directly into Fa0/4 on this switch. Click the line that shows it is actually reached through the uplink to another switch.",
+      "terminal": {
+        "prompt": "SW-MKT#",
+        "cmd": "show mac address-table dynamic",
+        "lines": [
+          "          Mac Address Table",
+          "-------------------------------------------",
+          "",
+          "Vlan    Mac Address       Type        Ports",
+          "----    -----------       --------    -----",
+          "   1    0050.7966.6801    DYNAMIC     Fa0/2",
+          "   1    0050.7966.6802    DYNAMIC     Fa0/3",
+          "   1    0050.7966.6803    DYNAMIC     Gi0/1",
+          "   1    0050.7966.6804    DYNAMIC     Gi0/1",
+          "   1    00e0.f71a.2b01    DYNAMIC     Gi0/1",
+          "Total Mac Addresses for this criterion: 5"
+        ]
+      },
+      "answer": [7],
+      "lineWhy": {
+        "5": "0050.7966.6801 is a different host, learned on Fa0/2.",
+        "6": "0050.7966.6802 is a different host, learned on Fa0/3.",
+        "8": "0050.7966.6804 is also behind Gi0/1, but it isn't PC-C.",
+        "9": "00e0.f71a.2b01 is another device behind the uplink (the router's MAC), not PC-C."
+      },
+      "hint": "Match the MAC, then read the port column.",
+      "explain": "PC-C's MAC was learned on Gi0/1, the uplink. It is plugged in somewhere downstream, not into Fa0/4. Several MACs on one port is the signature of a link to another switch."
+    },
+    {
+      "id": "nf-032", "obj": "1.11", "type": "recall", "diff": 2,
+      "title": "SSID vs BSSID",
+      "prompt": "What is a BSSID?",
+      "choices": [
+        { "t": "The MAC address of the AP radio serving a BSS", "why": "" },
+        { "t": "The human-readable network name", "why": "That is the SSID, for example \"Corp-WiFi\"." },
+        { "t": "A group of APs sharing the same SSID", "why": "That is an ESS (extended service set). It lets clients roam between APs." },
+        { "t": "The pre-shared key for the WLAN", "why": "The PSK is a security credential, unrelated to the BSS identifier." }
+      ],
+      "answer": 0,
+      "hint": "The SSID is the name. The BSSID is an address.",
+      "explain": "The BSSID is the radio MAC address (or a derived MAC per SSID) that identifies one AP's basic service set. Clients see many BSSIDs advertising the same SSID across an ESS."
+    },
+    {
+      "id": "nf-033", "obj": "1.11", "type": "recall", "diff": 2,
+      "title": "RF behavior",
+      "prompt": "A Wi-Fi signal bounces off a metal filing cabinet and reaches the client over a second path. What is this called?",
+      "choices": [
+        { "t": "Reflection", "why": "" },
+        { "t": "Absorption", "why": "Absorption is when a material (water, people, thick walls) soaks up RF energy and weakens the signal." },
+        { "t": "Refraction", "why": "Refraction is bending as the signal passes through media of different density, such as glass or air layers." },
+        { "t": "Scattering", "why": "Scattering is when a rough or uneven surface splits the signal into many weaker directions." }
+      ],
+      "answer": 0,
+      "hint": "Smooth metal acts like a mirror for RF.",
+      "explain": "Smooth, dense surfaces like metal reflect RF. Reflections arriving out of phase with the direct signal cause multipath interference."
+    },
+    {
+      "id": "nf-034", "obj": "1.12", "type": "scenario", "diff": 2,
+      "title": "Two customers, one subnet",
+      "prompt": "Two customers on the same router both use 10.1.1.0/24 and must stay isolated. What lets the router carry both without NAT?",
+      "choices": [
+        { "t": "VRFs, each with its own routing table", "why": "" },
+        { "t": "Put each customer in its own VLAN", "why": "VLANs separate Layer 2. The router still has one global routing table and will reject two interfaces in the same 10.1.1.0/24." },
+        { "t": "Run each customer in a container", "why": "Containers isolate applications on a host. They don't give the router separate routing tables." },
+        { "t": "Use secondary IP addresses", "why": "Secondary addresses live in the same routing table, so overlapping networks still conflict." }
+      ],
+      "answer": 0,
+      "hint": "You need more than one routing table on the same box.",
+      "explain": "A VRF (virtual routing and forwarding) instance is a separate routing table on the same router. Interfaces in different VRFs can reuse the same addresses without conflict."
+    },
+    {
+      "id": "nf-035", "obj": "1.2", "type": "recall", "diff": 2,
+      "title": "Collapsed core",
+      "prompt": "In a two-tier collapsed core design, which layers are combined?",
+      "choices": [
+        { "t": "Core and distribution", "why": "" },
+        { "t": "Access and distribution", "why": "The access layer stays separate. That is where endpoints connect." },
+        { "t": "Core and access", "why": "Merging core and access would put endpoints on the backbone. That isn't the collapsed core model." },
+        { "t": "All three layers", "why": "Merging everything is a flat single-switch network, not a two-tier design." }
+      ],
+      "answer": 0,
+      "hint": "Two tiers: one is where users plug in.",
+      "explain": "A collapsed core merges the core and distribution layers into one tier, leaving a separate access layer. It suits campuses too small to justify a dedicated core."
+    },
+    {
+      "id": "nf-036", "obj": "1.5", "type": "recall", "diff": 2,
+      "title": "DNS transport",
+      "prompt": "Which statement about DNS transport is correct?",
+      "choices": [
+        { "t": "Standard queries use UDP 53, and zone transfers use TCP 53", "why": "" },
+        { "t": "All DNS traffic uses TCP 53", "why": "Ordinary queries use UDP for speed. TCP is used for zone transfers and responses too large for UDP." },
+        { "t": "Queries use UDP 67", "why": "UDP 67 is the DHCP server port." },
+        { "t": "All DNS traffic uses UDP 53", "why": "Zone transfers (AXFR) and truncated responses fall back to TCP 53." }
+      ],
+      "answer": 0,
+      "hint": "Small and fast versus large and reliable.",
+      "explain": "DNS uses port 53 on both transports. Clients query over UDP. Servers use TCP for zone transfers and when a response is too large for UDP."
+    },
+    {
+      "id": "nf-037", "obj": "1.6", "type": "order", "diff": 2,
+      "title": "The VLSM method",
+      "prompt": "Put the VLSM design steps in order.",
+      "items": [
+        "List the subnets and sort them from most hosts to fewest",
+        "Choose the smallest block that fits the largest subnet (hosts + 2)",
+        "Assign that block starting at the base network address",
+        "Start the next subnet at the address after the previous broadcast",
+        "Repeat for each smaller subnet"
+      ],
+      "hint": "Biggest first keeps every block on its boundary.",
+      "explain": "Allocating largest first means every block starts on a boundary of its own size, so nothing overlaps and no space is stranded. This is the method behind the Sales/Marketing/HR design."
+    },
+    {
+      "id": "nf-038", "obj": "1.6", "type": "calc", "diff": 2,
+      "title": "Usable hosts in a /23",
+      "prompt": "How many usable host addresses does a /23 provide?",
+      "kind": "number", "answer": "510",
+      "hint": "9 host bits.",
+      "explain": "32 - 23 = 9 host bits. 2^9 = 512, minus the network and broadcast addresses = 510."
+    },
+    {
+      "id": "nf-039", "obj": "1.8", "type": "output", "diff": 2,
+      "title": "Spot the EUI-64 address",
+      "prompt": "Click the line that proves the global unicast address was built with EUI-64.",
+      "terminal": {
+        "prompt": "R1#",
+        "cmd": "show ipv6 interface gigabitEthernet 0/0",
+        "lines": [
+          "GigabitEthernet0/0 is up, line protocol is up",
+          "  IPv6 is enabled, link-local address is FE80::2E0:F7FF:FE1A:2B01",
+          "  No Virtual link-local address(es):",
+          "  Global unicast address(es):",
+          "    2001:DB8:ACAD:10:2E0:F7FF:FE1A:2B01, subnet is 2001:DB8:ACAD:10::/64 [EUI]",
+          "  Joined group address(es):",
+          "    FF02::1",
+          "    FF02::2",
+          "    FF02::1:FF1A:2B01",
+          "  MTU is 1500 bytes"
+        ]
+      },
+      "answer": [4],
+      "lineWhy": {
+        "1": "The link-local address contains FFFE too, but link-local addresses are built that way by default. The question is about the global address.",
+        "3": "This is only a heading.",
+        "8": "This is the solicited-node multicast group. It is derived from the address but doesn't say how the address was built."
+      },
+      "hint": "IOS tags the address with how it was formed.",
+      "explain": "IOS marks addresses configured with ipv6 address 2001:DB8:ACAD:10::/64 eui-64 with [EUI]. The FFFE in the middle of the interface ID is the other giveaway."
+    },
+    {
+      "id": "nf-040", "obj": "1.6", "type": "calc", "diff": 3,
+      "title": "First host in the 5th /28",
+      "prompt": "192.168.50.0/24 is divided into /28 subnets. Type the first usable host address in the 5th subnet.",
+      "kind": "ipv4", "answer": "192.168.50.65",
+      "hint": "Blocks of 16: the 1st starts at .0.",
+      "explain": "/28 blocks are 16 addresses: .0, .16, .32, .48, .64. The 5th subnet is 192.168.50.64/28, and its first usable host is .65."
+    },
+    {
+      "id": "nf-041", "obj": "1.6", "type": "calc", "diff": 3,
+      "title": "Network of 10.47.139.201/19",
+      "prompt": "Type the network address for 10.47.139.201/19.",
+      "kind": "ipv4", "answer": "10.47.128.0",
+      "hint": "/19 puts a block size of 32 in the 3rd octet.",
+      "explain": "/19 = 255.255.224.0, block size 32 in the 3rd octet: 96, 128, 160. 139 falls in 128 to 159, so the network is 10.47.128.0."
+    },
+    {
+      "id": "nf-042", "obj": "1.6", "type": "calc", "diff": 3,
+      "title": "Last host of 172.20.99.14/20",
+      "prompt": "Type the last usable host address in the subnet containing 172.20.99.14/20.",
+      "kind": "ipv4", "answer": "172.20.111.254",
+      "hint": "Block of 16 in the 3rd octet. Find the broadcast, then step back one.",
+      "explain": "/20 = 255.255.240.0, block size 16 in the 3rd octet: 96 to 111. The broadcast is 172.20.111.255, so the last usable host is 172.20.111.254."
+    },
+    {
+      "id": "nf-043", "obj": "1.4", "type": "output", "diff": 3,
+      "title": "The slow uplink",
+      "prompt": "Users behind SW-HR Fa0/24 report a slow, unreliable link. The far end is hard-set to full duplex. Click the line that proves a duplex mismatch from this side.",
+      "terminal": {
+        "prompt": "SW-HR#",
+        "cmd": "show interfaces fastEthernet 0/24",
+        "lines": [
+          "FastEthernet0/24 is up, line protocol is up (connected)",
+          "  Hardware is Fast Ethernet, address is 0019.e86a.6f98 (bia 0019.e86a.6f98)",
+          "  MTU 1500 bytes, BW 100000 Kbit/sec, DLY 100 usec,",
+          "     reliability 255/255, txload 1/255, rxload 1/255",
+          "  Encapsulation ARPA, loopback not set",
+          "  Half-duplex, 100Mb/s, media type is 10/100BaseTX",
+          "     5432 packets input, 612034 bytes, 0 no buffer",
+          "     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored",
+          "     19873 packets output, 2210385 bytes, 0 underruns",
+          "     387 output errors, 1442 collisions, 2 interface resets",
+          "     0 babbles, 387 late collision, 0 deferred"
+        ]
+      },
+      "answer": [10],
+      "lineWhy": {
+        "0": "up/up only means Layer 1 and 2 are working. A link with a duplex mismatch stays up, it just performs badly.",
+        "5": "This shows the port is half duplex, but half duplex alone isn't a fault. A link to a hub is legitimately half duplex. The late collisions are the proof.",
+        "7": "Zero CRC errors on this side is expected. CRC and runt errors show up on the full-duplex end of a mismatch.",
+        "9": "Normal collisions are expected on any half-duplex link. Only late collisions show the far end is transmitting without listening."
+      }
+    ,
+      "hint": "Ordinary collisions are normal on half duplex. Which kind isn't?",
+      "explain": "Late collisions (after the first 64 bytes) happen when the far end transmits without CSMA/CD, which is what a full-duplex neighbor does. Late collisions on the half side plus CRC/runts on the full side is the duplex mismatch signature. Fix it by setting both ends to auto, or both to the same fixed values."
+    },
+    {
+      "id": "nf-044", "obj": "1.9", "type": "output", "diff": 3,
+      "title": "Solicited-node group",
+      "prompt": "Click the multicast group this interface joined so neighbors can resolve its addresses with NDP.",
+      "terminal": {
+        "prompt": "R1#",
+        "cmd": "show ipv6 interface gigabitEthernet 0/0",
+        "lines": [
+          "GigabitEthernet0/0 is up, line protocol is up",
+          "  IPv6 is enabled, link-local address is FE80::2E0:F7FF:FE1A:2B01",
+          "  No Virtual link-local address(es):",
+          "  Global unicast address(es):",
+          "    2001:DB8:ACAD:10:2E0:F7FF:FE1A:2B01, subnet is 2001:DB8:ACAD:10::/64 [EUI]",
+          "  Joined group address(es):",
+          "    FF02::1",
+          "    FF02::2",
+          "    FF02::1:FF1A:2B01",
+          "  MTU is 1500 bytes"
+        ]
+      },
+      "answer": [8],
+      "lineWhy": {
+        "1": "This is the link-local unicast address, not a multicast group.",
+        "4": "This is the global unicast address, not a multicast group.",
+        "6": "FF02::1 is all-nodes. Every IPv6 host joins it. It isn't used to target one host's address resolution.",
+        "7": "FF02::2 is all-routers, joined because ipv6 unicast-routing is enabled."
+      },
+      "hint": "FF02::1:FF plus the last 24 bits of the address.",
+      "explain": "The solicited-node multicast address is FF02::1:FF followed by the last 24 bits of the unicast address (1A:2B01). Neighbor Solicitations go to it instead of a broadcast, so only hosts whose addresses end the same way are interrupted."
+    },
+    {
+      "id": "nf-045", "obj": "1.10", "type": "output", "diff": 3,
+      "title": "Linux host, wrong boundary",
+      "prompt": "This Linux host belongs in Marketing (10.10.10.128/26). It can reach its gateway 10.10.10.190 but not Sales hosts in 10.10.10.0/25. Click the line that explains why.",
+      "terminal": {
+        "prompt": "$ ",
+        "cmd": "ip addr show eth0",
+        "lines": [
+          "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000",
+          "    link/ether 52:54:00:3a:1c:7e brd ff:ff:ff:ff:ff:ff",
+          "    inet 10.10.10.140/24 brd 10.10.10.255 scope global eth0",
+          "       valid_lft forever preferred_lft forever",
+          "    inet6 fe80::5054:ff:fe3a:1c7e/64 scope link",
+          "       valid_lft forever preferred_lft forever"
+        ]
+      },
+      "answer": [2],
+      "lineWhy": {
+        "0": "The interface is UP with LOWER_UP (carrier present), so Layer 1 is fine.",
+        "1": "The MAC address is normal and doesn't affect which destinations the host treats as local.",
+        "4": "The IPv6 link-local address is unrelated to IPv4 reachability to Sales."
+      },
+      "hint": "What does the host believe is on its own wire?",
+      "explain": "The host has a /24 instead of a /26. It treats all of 10.10.10.0 to .255 as on-link, so for a Sales host like 10.10.10.10 it sends an ARP request directly instead of going to the gateway. Nobody on the Marketing segment answers. The gateway works only because .190 is inside both masks."
+    },
+    {
+      "id": "nf-046", "obj": "1.4", "type": "scenario", "diff": 3,
+      "title": "Hard-coded on one side",
+      "prompt": "Switch A's port is hard-coded to 100 Mbps full duplex. Switch B's port is left on auto. What happens?",
+      "choices": [
+        { "t": "B detects 100 Mbps but falls back to half duplex, creating a duplex mismatch", "why": "" },
+        { "t": "B negotiates 100 Mbps full duplex to match A", "why": "A hard-coded port stops sending autonegotiation pulses, so B has nothing to negotiate with. B can sense speed but not duplex." },
+        { "t": "The link stays down", "why": "B detects the speed from the signal (parallel detection), so the link comes up." },
+        { "t": "B links at 1000 Mbps full duplex", "why": "Speed comes from the signal on the wire, which is 100 Mbps. Speeds can't mismatch on a working link." }
+      ],
+      "answer": 0,
+      "hint": "Autonegotiation needs both sides to talk.",
+      "explain": "With autonegotiation off on A, B uses parallel detection. It can sense 100 Mbps, but duplex can't be sensed, so B falls back to half duplex at 10/100. Result: A full, B half, which is a duplex mismatch. Set both sides the same way."
+    },
+    {
+      "id": "nf-047", "obj": "1.8", "type": "calc", "diff": 3,
+      "title": "Full EUI-64 address",
+      "prompt": "A router interface with MAC 0C1F.5A33.90D2 is configured with ipv6 address 2001:DB8:CAFE:1::/64 eui-64. Type the resulting global unicast address.",
+      "kind": "ipv6", "answer": "2001:DB8:CAFE:1:E1F:5AFF:FE33:90D2",
+      "hint": "0x0C with the 7th bit flipped is 0x0E.",
+      "explain": "Split the MAC: 0C1F5A | 3390D2. Insert FFFE: 0C1F:5AFF:FE33:90D2. Flip the U/L bit: 0x0C = 00001100 becomes 00001110 = 0x0E. Interface ID: 0E1F:5AFF:FE33:90D2. Address: 2001:DB8:CAFE:1:E1F:5AFF:FE33:90D2."
+    },
+    {
+      "id": "nf-048", "obj": "1.6", "type": "calc", "diff": 3,
+      "title": "/30 links from a /26",
+      "prompt": "A /26 is carved entirely into /30 point-to-point links. How many usable host addresses are there in total across all the links?",
+      "kind": "number", "answer": "32",
+      "hint": "First count the links, then multiply by usable hosts per /30.",
+      "explain": "A /26 is 64 addresses. A /30 is 4 addresses, so there are 64 / 4 = 16 links. Each /30 has 2 usable hosts, for 16 x 2 = 32 usable addresses. Half the block goes to network and broadcast addresses, which is why /31s exist for point-to-point links."
+    },
+    {
+      "id": "nf-049", "obj": "1.6", "type": "scenario", "diff": 3,
+      "title": "Same subnet as 172.16.33.10/20",
+      "prompt": "Which host is in the same subnet as 172.16.33.10/20?",
+      "choices": [
+        { "t": "172.16.47.200", "why": "" },
+        { "t": "172.16.31.254", "why": "This falls in 172.16.16.0/20 (.16 to .31 in the 3rd octet), the block before 172.16.33.10's subnet." },
+        { "t": "172.16.48.1", "why": "This falls in 172.16.48.0/20, the next block." },
+        { "t": "172.16.64.10", "why": "This falls in 172.16.64.0/20, two blocks past." }
+      ],
+      "answer": 0,
+      "hint": "/20 is a block of 16 in the 3rd octet.",
+      "explain": "/20 = 255.255.240.0, blocks of 16 in the 3rd octet. 33 falls in 32 to 47, so the subnet spans 172.16.32.0 to 172.16.47.255. Only 172.16.47.200 is inside it."
+    }
+  ]
+}
