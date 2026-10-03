@@ -162,7 +162,35 @@
     setTimeout(() => bossG.classList.remove(cls), ms);
   }
 
+  /* Static card art (markup strings) for menus. */
+  let pid = 0;
+  function portrait() {
+    const id = 'pt' + (++pid);
+    return `<svg viewBox="-140 -160 280 330" class="portrait" aria-hidden="true">
+      <defs><pattern id="${id}" width="150" height="13" patternUnits="userSpaceOnUse">
+        <rect width="150" height="13" class="cloak-bg"/><text x="0" y="10" class="bits">11111111.11111111.111111</text></pattern></defs>
+      <path d="M-30 -96 C-70 -60 -96 40 -128 168 L128 168 C96 40 70 -60 30 -96 Z" fill="url(#${id})" class="cloak"/>
+      <path d="M0 -150 C-56 -150 -70 -92 -66 -40 C-50 -70 50 -70 66 -40 C70 -92 56 -150 0 -150 Z" class="hood"/>
+      <ellipse cx="0" cy="-84" rx="33" ry="44" class="face-plate"/>
+      <path d="M0 -126 V-42" class="seam"/>
+    </svg>`;
+  }
+  const GLYPHS = {
+    loop: '<path d="M-40 0 C-40 -30 0 -30 0 0 C0 30 40 30 40 0 C40 -30 0 -30 0 0 C0 30 -40 30 -40 0 Z"/><circle r="52" class="faint"/>',
+    blackhole: '<circle r="12"/><circle r="26" class="faint"/><circle r="40" class="faint"/><circle r="54" class="fainter"/>',
+    rogue: '<rect x="-34" y="-22" width="68" height="44"/><path d="M-34 -22 L0 6 L34 -22"/><path d="M-50 40 H50" class="faint"/>',
+    intruder: '<rect x="-30" y="-6" width="60" height="44"/><path d="M-18 -6 V-24 C-18 -46 18 -46 18 -24 V-14"/><circle cy="14" r="5"/>',
+    script: '<path d="M-20 -40 C-36 -40 -32 -10 -44 0 C-32 10 -36 40 -20 40 M20 -40 C36 -40 32 -10 44 0 C32 10 36 40 20 40"/><path d="M-8 0 H8" />',
+    outage: '<path d="M8 -50 L-22 6 H2 L-8 50 L24 -8 H0 Z"/>',
+    cone: '<path d="M0 -50 L32 36 H-32 Z"/><path d="M-14 -10 H14 M-22 14 H22" class="faint"/><path d="M-48 36 H48"/>',
+    bars: '<path d="M-36 40 V12 M-12 40 V-10 M12 40 V-26 M36 40 V-46"/><path d="M-50 40 H50" class="faint"/>',
+    board: '<rect x="-34" y="-40" width="68" height="84"/><path d="M-14 -48 H14 V-34 H-14 Z"/><path d="M-20 -14 H20 M-20 4 H20 M-20 22 H8" class="faint"/>',
+    clock: '<circle cy="6" r="40"/><path d="M0 6 V-16 M0 6 L16 16"/><path d="M-10 -46 H10 M0 -46 V-34" class="faint"/>'
+  };
+  const glyph = key => `<svg viewBox="-70 -70 140 140" class="glyph-art" aria-hidden="true">${GLYPHS[key] || ''}</svg>`;
+
   root.LHArena = {
+    portrait, glyph,
     mount, update,
     hit: crit => pulse(crit ? 'crit' : 'hit', crit ? 700 : 400),
     taunt: () => pulse('taunt', 900)

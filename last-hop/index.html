@@ -7,18 +7,31 @@
 <meta name="description" content="A CCNA 200-301 boss-fight game. Repair the network by answering exam questions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-screen="menu">
 <!--BODY-->
 <div id="app">
   <header class="topbar">
-    <a href="#" id="home" class="brand" aria-label="LAST HOP, back to roster"><span class="brand-mark" aria-hidden="true"></span>LAST HOP</a>
-    <span class="topbar-sub">CCNA 200-301 · incident response</span>
-    <button class="btn ghost small" id="sound" aria-pressed="false">Sound off</button>
+    <div class="wrap">
+      <a href="#" id="home" class="brand" aria-label="LAST HOP home">Last<b>/</b>Hop</a>
+      <nav class="tabs" aria-label="Main">
+        <kbd>Q</kbd>
+        <button class="tab" data-tab="home">Home</button>
+        <button class="tab" data-tab="match">Match</button>
+        <button class="tab" data-tab="mastery">Mastery</button>
+        <button class="tab" data-tab="guide">How to play</button>
+        <kbd>E</kbd>
+      </nav>
+      <div class="top-right">
+        <span class="season">CCNA 200-301<br>Blueprint v1.1</span>
+        <button class="sound" id="sound" aria-pressed="false">Sound off</button>
+      </div>
+    </div>
   </header>
-  <main id="screen"><section class="menu"><p class="lede">Loading the question bank…</p></section></main>
+  <main id="screen" class="wrap"><section class="notice"><p class="dim">Loading the question bank…</p></section></main>
+  <footer class="prompts"><div class="wrap" id="prompts"></div></footer>
 </div>
 <!--/BODY-->
 <script src="js/engine.js"></script>

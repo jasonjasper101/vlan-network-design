@@ -22,6 +22,21 @@ To get a single self-contained file (questions inlined, no server needed):
 node tools/bundle.js dist/last-hop.html
 ```
 
+## Controls
+
+The front end follows sports-game menu conventions: hub tiles, collectible cards, a match scoreboard and button prompts along the bottom. Everything works with a mouse, and every action also has a key.
+
+| Key | Action |
+|---|---|
+| `Q` / `E` | Previous / next tab (Home, Match, Mastery, How to play) |
+| `Enter` | Select, kick off, continue |
+| `Esc` | Back |
+| `←` / `→` | Switch between Boss run and Practice on the match setup screen |
+| `1` `2` `3` | Pick a question card |
+| `A`–`D` | Answer a multiple-choice question |
+| `X` / `H` | Packet Capture / TAC Case |
+| `R` | Reload in 5, right after a miss |
+
 ## How a fight works
 
 | Mechanic | Rule |
