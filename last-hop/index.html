@@ -7,7 +7,7 @@
 <meta name="description" content="A CCNA 200-301 boss-fight game. Repair the network by answering exam questions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-screen="menu">
@@ -15,7 +15,7 @@
 <div id="app">
   <header class="topbar">
     <div class="wrap">
-      <a href="#" id="home" class="brand" aria-label="LAST HOP home">Last<b>/</b>Hop</a>
+      <a href="#" id="home" class="brand" aria-label="LAST HOP, home">Last<b>/</b>Hop</a>
       <nav class="tabs" aria-label="Main">
         <kbd>Q</kbd>
         <button class="tab" data-tab="home">Home</button>
@@ -25,12 +25,12 @@
         <kbd>E</kbd>
       </nav>
       <div class="top-right">
-        <span class="season">CCNA 200-301<br>Blueprint v1.1</span>
-        <button class="sound" id="sound" aria-pressed="false">Sound off</button>
+        <span id="match-ctl"></span>
+        <button class="top-btn" id="sound" aria-pressed="false">Sound: Off</button>
       </div>
     </div>
   </header>
-  <main id="screen" class="wrap"><section class="notice"><p class="dim">Loading the question bank…</p></section></main>
+  <main id="screen" class="wrap"><section class="notice"><p class="dim">Loading questions…</p></section></main>
   <footer class="prompts"><div class="wrap" id="prompts"></div></footer>
 </div>
 <!--/BODY-->

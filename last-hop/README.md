@@ -2,7 +2,7 @@
 
 A CCNA 200-301 boss-fight game. A city's backbone is failing and you're the on-call engineer. Each boss is a failure mode that has taken over part of the network. Correct answers repair links and damage the boss. Wrong answers cost you uptime.
 
-This is the vertical slice. **The Mask** (1.0 Network Fundamentals) is fully playable with 49 questions. The other five bosses and The Outage appear on the roster but stay locked until their question banks are written.
+Only the first boss is playable so far. **The Mask** (1.0 Network Fundamentals) has 49 questions. The other five bosses, The Outage and Exam mode are listed as locked until their questions are written.
 
 ## Run it
 
@@ -24,36 +24,39 @@ node tools/bundle.js dist/last-hop.html
 
 ## Controls
 
-The front end follows sports-game menu conventions: hub tiles, collectible cards, a match scoreboard and button prompts along the bottom. Everything works with a mouse, and every action also has a key.
+Every action works with a mouse, a touch screen or a key. On a keyboard, the bar along the bottom of the screen shows the keys for the current screen.
 
 | Key | Action |
 |---|---|
 | `Q` / `E` | Previous / next tab (Home, Match, Mastery, How to play) |
 | `Enter` | Select, kick off, continue |
 | `Esc` | Back |
-| `←` / `→` | Switch between Boss run and Practice on the match setup screen |
+| `↑` / `↓` | Move through lists, answers and terminal lines |
+| `←` / `→` | Switch between Boss match and Practice on the match setup screen |
 | `1` `2` `3` | Pick a question card |
-| `A`–`D` | Answer a multiple-choice question |
+| `A` `B` `C` `D` | Answer a multiple-choice question |
+| `F` | Flag the selected terminal line |
+| `L` | Lock in an order |
 | `X` / `H` | Packet Capture / TAC Case |
-| `R` | Reload in 5, right after a miss |
+| `R` | Reload, right after a miss |
 
 ## How a fight works
 
 | Mechanic | Rule |
 |---|---|
 | Boss HP | Blueprint weight × 18. The Mask is 20%, so it has 360 HP. |
-| Attack vectors | Each turn offers up to 3 questions with different objectives. You choose. |
-| Damage | Base by type (Recall 5, Scenario 8, Order 9, Calculate 10, Read the output 12) × (0.7 + 0.3 × difficulty) × crit × streak |
+| Cards | Each turn deals up to 3 question cards from different topics. The number on a card is its damage. You choose. |
+| Damage | Base by type × (0.7 + 0.3 × difficulty) × weak point × streak. Bronze cards: Recall 5. Silver: Scenario 8, Put in order 9. Gold: Calculate 10, Read the output 12. |
 | Phases | At 66% HP, difficulty-2 questions. At 33%, difficulty 3 with a clock (20 to 45 s by type). |
-| Weak points | 4 hidden objectives per boss deal ×1.8. Landing one exposes it, and it stays exposed across runs. |
+| Weak points | 4 hidden topics per boss take ×1.8 damage. Answering one correctly reveals it for every later match. |
 | Uptime | You start at 99.999% (5 nines). A miss costs 0.5 nines. Below 90.000% the SLA is breached. |
-| Convergence | Each consecutive correct answer adds +0.2× damage, up to ×2.0. A miss resets it. |
-| Aftershocks | A missed question returns 3 turns later and has to be cleared. Across runs, missed questions are weighted to come up first. |
-| Items | Packet Capture ×2 removes wrong options. TAC Case ×3 gives a hint for 0.2 nines (and 10 s on the clock). Reload in 5 ×1 undoes a miss. |
+| Streak | Each consecutive correct answer adds +0.2× damage, up to ×2.0. A miss resets it. |
+| Aftershocks | A missed question returns 3 turns later and has to be cleared. Questions missed in earlier matches come up first. |
+| Items | Packet Capture ×2 removes wrong options. TAC Case ×3 gives a hint for 0.2 nines (and 10 s on the clock). Reload ×1 undoes a miss. |
 
-**Practice mode** gives you free hints, no clock and no uptime loss. The **mastery map** colors every blueprint objective green, amber or red from your last eight answers on it. Progress is saved in your browser's localStorage.
+**Practice** gives you free hints, no clock and no uptime loss. Ratings still update, but best uptime isn't saved. The **Mastery** screen rates every exam topic 0 to 99 from your last eight answers on it, once it has at least three. Progress is saved in your browser's localStorage.
 
-In simulation, a player who picks the hardest-hitting card wins about 88% of runs at 80% accuracy and about half at 70%. That puts the difficulty curve close to a real passing bar.
+In simulation, a player who picks the hardest-hitting card wins about 88% of matches at 80% accuracy and about half at 70%. That puts the difficulty curve close to a real passing bar.
 
 ## Project layout
 

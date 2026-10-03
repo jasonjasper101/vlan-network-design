@@ -1,5 +1,5 @@
 /* The arena: an SVG topology. Left is your network; right is the boss's corrupted side.
-   Link color is the only color, and it always means link state. */
+   Link color is the only color in here, and it always means link state. */
 (function (root) {
   'use strict';
   const NS = 'http://www.w3.org/2000/svg';
@@ -26,65 +26,77 @@
   // The boss's side, in the order you take it back (nearest to you first).
   const THEIRS = [['r1', 'ea'], ['r1', 'eb'], ['ea', 'eb'], ['ea', 'cx'], ['eb', 'cx'], ['cx', 'boss']];
 
-  let svg, links = {}, bossG, faceG, crackG, octets = [], lastStates = {};
+  // The last octet of the mask it wears loosens each phase: /26, /25, /24.
+  const LAST_OCTET = { 1: '192', 2: '128', 3: '0' };
+
+  /* The Mask: a face plate whose visor is the subnet mask it wears. Flat shapes, no texture. */
+  function maskFigure(octet) {
+    const oct = ['255', '255', '255', octet || '192'];
+    const visor = oct.map((v, i) => {
+      const x = -74 + i * 38;
+      return `<rect x="${x}" y="-94" width="34" height="26"/><text x="${x + 17}" y="-76" text-anchor="middle"${i === 3 ? ' class="last"' : ''}>${v}</text>`;
+    }).join('');
+    return `
+      <path class="torso" d="M-118 170 L-104 72 C-90 46 -52 36 0 36 C52 36 90 46 104 72 L118 170 Z"/>
+      <rect class="band" x="-106" y="98" width="212" height="28"/>
+      <text class="band-text" x="0" y="117" text-anchor="middle">${oct.join('.')}</text>
+      <rect class="neck" x="-20" y="16" width="40" height="26"/>
+      <path class="plate" d="M0 -152 C58 -152 80 -116 80 -66 C80 -14 52 26 0 36 C-52 26 -80 -14 -80 -66 C-80 -116 -58 -152 0 -152 Z"/>
+      <path class="seam" d="M0 -152 V-94 M0 -68 V36"/>
+      <g class="visor">${visor}</g>
+      <g class="cracks">
+        <path class="crack c2" d="M-30 -60 L-38 -40 L-30 -28 L-44 -6"/>
+        <path class="crack c2" d="M34 -62 L42 -44 L36 -26"/>
+        <path class="crack c3 split" d="M0 -68 L-4 -50 L4 -34 L-3 -16 L4 4 L0 36"/>
+        <text class="void" x="-30" y="12" text-anchor="middle">/0</text>
+      </g>`;
+  }
+
+  /** Static portrait for menus and cards. */
+  function portrait() {
+    return `<svg viewBox="-140 -160 280 336" class="portrait" aria-hidden="true">${maskFigure('192')}</svg>`;
+  }
+
+  let svg, links = {}, bossG, glitchAnim = null, glitchOn = false, lastStates = {}, ro = null;
 
   function nodeShape(g, n) {
     const s = el('g', { transform: `translate(${n.x},${n.y})`, class: 'node' }, g);
     if (n.t === 'pc') {
-      el('rect', { x: -15, y: -12, width: 30, height: 20, rx: 2 }, s);
+      el('rect', { x: -15, y: -12, width: 30, height: 20 }, s);
       el('path', { d: 'M-7 13 H7 M0 8 V13' }, s);
     } else if (n.t === 'sw') {
-      el('rect', { x: -26, y: -13, width: 52, height: 26, rx: 3 }, s);
-      el('path', { d: 'M-16 -4 H14 M10 -8 L14 -4 L10 0 M16 4 H-14 M-10 0 L-14 4 L-10 8', class: 'glyph' }, s);
+      // Workgroup switch: crossing arrow pairs.
+      el('rect', { x: -26, y: -13, width: 52, height: 26 }, s);
+      el('path', { d: 'M-16 -5 H14 M10 -9 L14 -5 L10 -1 M16 5 H-14 M-10 1 L-14 5 L-10 9', class: 'glyph' }, s);
     } else {
+      // Router: four diagonal arrows, two pointing in and two pointing out.
       el('circle', { r: 20 }, s);
-      el('path', { d: 'M-11 0 H11 M0 -11 V11 M7 -4 L11 0 L7 4 M-7 -4 L-11 0 L-7 4 M-4 -7 L0 -11 L4 -7 M-4 7 L0 11 L4 7', class: 'glyph' }, s);
+      el('path', { d: 'M-13 -13 L-4 -4 M-4 -9 L-4 -4 L-9 -4 M13 13 L4 4 M4 9 L4 4 L9 4 M4 -4 L13 -13 M8 -13 L13 -13 L13 -8 M-4 4 L-13 13 M-8 13 L-13 13 L-13 8', class: 'glyph' }, s);
     }
     const ly = n.t === 'pc' ? 26 : n.t === 'sw' ? 28 : 34;
-    el('text', { y: ly, class: 'nlabel', 'text-anchor': 'middle' }, s).textContent = n.l;
+    el('text', { y: ly, class: `nlabel ${n.t}`, 'text-anchor': 'middle' }, s).textContent = n.l;
   }
 
-  function bossFigure(g) {
-    bossG = el('g', { transform: 'translate(810,236)', class: 'boss' }, g);
+  function bossFigure() {
     const defs = el('defs', {}, svg);
-
-    // Cloak fabric: the mask itself, written over and over.
-    const pat = el('pattern', { id: 'bits', width: 150, height: 13, patternUnits: 'userSpaceOnUse' }, defs);
-    el('rect', { width: 150, height: 13, class: 'cloak-bg' }, pat);
-    el('text', { x: 0, y: 10, class: 'bits' }, pat).textContent = '11111111.11111111.111111';
-    const pat2 = el('pattern', { id: 'bits2', width: 150, height: 13, patternUnits: 'userSpaceOnUse', x: 37, y: 6 }, defs);
-    el('text', { x: 0, y: 10, class: 'bits dim' }, pat2).textContent = '11000000.11100000.11110000';
-
     const glitch = el('filter', { id: 'glitch', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
     const turb = el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.02 0.4', numOctaves: 1, seed: 3, result: 'n' }, glitch);
-    el('animate', { attributeName: 'seed', values: '1;5;9;2;7', dur: '1.2s', repeatCount: 'indefinite' }, turb);
+    glitchAnim = el('animate', { attributeName: 'seed', values: '1;5;9;2;7', dur: '1.2s', repeatCount: 'indefinite', begin: 'indefinite' }, turb);
     el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: 6 }, glitch);
+    glitchOn = false;
 
+    bossG = el('g', { transform: 'translate(810,236)', class: 'boss' }, svg);
     const body = el('g', { class: 'boss-body' }, bossG);
-    const cloak = 'M-30 -96 C-70 -60 -96 40 -128 168 L128 168 C96 40 70 -60 30 -96 Z';
-    el('path', { d: cloak, fill: 'url(#bits)', class: 'cloak' }, body);
-    el('path', { d: cloak, fill: 'url(#bits2)', class: 'cloak-overlay' }, body);
-    el('path', { d: 'M0 -150 C-56 -150 -70 -92 -66 -40 C-50 -70 50 -70 66 -40 C70 -92 56 -150 0 -150 Z', class: 'hood' }, body);
+    body.innerHTML = maskFigure(LAST_OCTET[1]);
+  }
 
-    faceG = el('g', { class: 'face' }, body);
-    el('ellipse', { cx: 0, cy: -84, rx: 33, ry: 44, class: 'face-plate' }, faceG);
-    el('path', { d: 'M0 -126 V-42', class: 'seam' }, faceG);
-    crackG = el('g', { class: 'cracks' }, faceG);
-    el('path', { d: 'M-4 -120 L-12 -100 L-6 -90 L-18 -70', class: 'crack c2' }, crackG);
-    el('path', { d: 'M8 -112 L16 -96 L10 -80', class: 'crack c2' }, crackG);
-    el('path', { d: 'M0 -126 L-3 -110 L4 -96 L-2 -80 L5 -62 L0 -42', class: 'crack c3 split' }, crackG);
-    el('text', { x: 0, y: -78, class: 'void', 'text-anchor': 'middle' }, crackG).textContent = '/0';
-
-    // Four floating octets of the mask it wears: 255.255.255.192
-    // Animate the wrapper only: a CSS transform would override each octet's SVG translate.
-    const octG = el('g', { class: 'octets' }, bossG);
-    const ov = ['255', '255', '255', '192'];
-    ov.forEach((v, i) => {
-      const og = el('g', { class: 'octet', transform: `translate(${-108 + i * 72},${200})` }, octG);
-      el('rect', { x: -30, y: -13, width: 60, height: 26, rx: 2 }, og);
-      el('text', { y: 5, 'text-anchor': 'middle' }, og).textContent = v;
-      octets.push(og);
-    });
+  /** Keep labels near 11px on screen however small the arena gets. */
+  function scaleLabels() {
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return;
+    const k = Math.max(1000 / r.width, 470 / r.height);
+    svg.style.setProperty('--k', k.toFixed(3));
+    svg.classList.toggle('compact', k > 1.9);
   }
 
   function mount(target) {
@@ -94,8 +106,8 @@
     const bg = el('g', { class: 'bg' }, svg);
     el('rect', { x: 400, y: 0, width: 600, height: 470, class: 'corrupt-zone' }, bg);
     el('line', { x1: 400, y1: 10, x2: 400, y2: 460, class: 'front' }, bg);
-    el('text', { x: 16, y: 462, class: 'zone-label' }, bg).textContent = 'YOUR NETWORK';
-    el('text', { x: 984, y: 462, class: 'zone-label', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
+    el('text', { x: 16, y: 460, class: 'zone-label' }, bg).textContent = 'YOUR NETWORK';
+    el('text', { x: 984, y: 460, class: 'zone-label', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
 
     const lg = el('g', { class: 'links' }, svg);
     const ng = el('g', { class: 'nodes' }, svg);
@@ -109,8 +121,11 @@
       links[key] = el('path', { d, class: 'link up' }, lg);
     });
     Object.values(NODES).forEach(n => nodeShape(ng, n));
-    bossFigure(svg);
+    bossFigure();
     lastStates = {};
+    if (ro) ro.disconnect();
+    if (root.ResizeObserver) { ro = new ResizeObserver(scaleLabels); ro.observe(svg); }
+    scaleLabels();
   }
 
   function setLink(key, state) {
@@ -121,7 +136,7 @@
     lastStates[key] = state;
     p.setAttribute('class', `link ${state}`);
     if (prev) {
-      // Flicker on change, then settle. Restart the animation if it was mid-flight.
+      // Stepped flicker on change. Restart it if it was mid-flight.
       p.classList.remove('flicker'); void p.getBBox(); p.classList.add('flicker');
     }
   }
@@ -132,11 +147,10 @@
     const t = THEIRS.length * hpFrac;
     const healed = THEIRS.length - Math.ceil(t - 1e-9);
     THEIRS.forEach(([a, b], i) => {
-      const key = a + '-' + b;
       let s = 'down';
       if (i < healed) s = 'up';
       else if (i === healed && t % 1 > 0 && t % 1 < 0.5) s = 'deg';
-      setLink(key, hpFrac <= 0 ? 'up' : s);
+      setLink(a + '-' + b, hpFrac <= 0 ? 'up' : s);
     });
     // Your side: corruption proportional to uptime lost.
     const lost = Math.max(0, Math.min(1, (startNines - nines) / (startNines - floorNines)));
@@ -147,12 +161,18 @@
       else if (i < Math.ceil(bad)) s = 'deg';
       setLink(a + '-' + b, s);
     });
-    if (bossG) {
-      bossG.setAttribute('data-phase', phase);
-      bossG.classList.toggle('defeated', hpFrac <= 0);
-      // The last octet loosens as phases go: 192 -> 128 -> 0 (the boundary dissolves).
-      const last = octets[3] && octets[3].querySelector('text');
-      if (last) last.textContent = hpFrac <= 0 ? '000' : phase === 1 ? '192' : phase === 2 ? '128' : '0';
+    if (!bossG) return;
+    bossG.setAttribute('data-phase', phase);
+    bossG.classList.toggle('defeated', hpFrac <= 0);
+    const octet = hpFrac <= 0 ? '0' : LAST_OCTET[phase];
+    const last = bossG.querySelector('.visor .last');
+    if (last && last.textContent !== octet) {
+      last.textContent = octet;
+      bossG.querySelector('.band-text').textContent = `255.255.255.${octet}`;
+    }
+    if (phase === 3 && hpFrac > 0 && !glitchOn && glitchAnim && glitchAnim.beginElement) {
+      glitchOn = true;
+      try { glitchAnim.beginElement(); } catch (e) { /* SMIL unavailable: the filter still applies */ }
     }
   }
 
@@ -162,36 +182,8 @@
     setTimeout(() => bossG.classList.remove(cls), ms);
   }
 
-  /* Static card art (markup strings) for menus. */
-  let pid = 0;
-  function portrait() {
-    const id = 'pt' + (++pid);
-    return `<svg viewBox="-140 -160 280 330" class="portrait" aria-hidden="true">
-      <defs><pattern id="${id}" width="150" height="13" patternUnits="userSpaceOnUse">
-        <rect width="150" height="13" class="cloak-bg"/><text x="0" y="10" class="bits">11111111.11111111.111111</text></pattern></defs>
-      <path d="M-30 -96 C-70 -60 -96 40 -128 168 L128 168 C96 40 70 -60 30 -96 Z" fill="url(#${id})" class="cloak"/>
-      <path d="M0 -150 C-56 -150 -70 -92 -66 -40 C-50 -70 50 -70 66 -40 C70 -92 56 -150 0 -150 Z" class="hood"/>
-      <ellipse cx="0" cy="-84" rx="33" ry="44" class="face-plate"/>
-      <path d="M0 -126 V-42" class="seam"/>
-    </svg>`;
-  }
-  const GLYPHS = {
-    loop: '<path d="M-40 0 C-40 -30 0 -30 0 0 C0 30 40 30 40 0 C40 -30 0 -30 0 0 C0 30 -40 30 -40 0 Z"/><circle r="52" class="faint"/>',
-    blackhole: '<circle r="12"/><circle r="26" class="faint"/><circle r="40" class="faint"/><circle r="54" class="fainter"/>',
-    rogue: '<rect x="-34" y="-22" width="68" height="44"/><path d="M-34 -22 L0 6 L34 -22"/><path d="M-50 40 H50" class="faint"/>',
-    intruder: '<rect x="-30" y="-6" width="60" height="44"/><path d="M-18 -6 V-24 C-18 -46 18 -46 18 -24 V-14"/><circle cy="14" r="5"/>',
-    script: '<path d="M-20 -40 C-36 -40 -32 -10 -44 0 C-32 10 -36 40 -20 40 M20 -40 C36 -40 32 -10 44 0 C32 10 36 40 20 40"/><path d="M-8 0 H8" />',
-    outage: '<path d="M8 -50 L-22 6 H2 L-8 50 L24 -8 H0 Z"/>',
-    cone: '<path d="M0 -50 L32 36 H-32 Z"/><path d="M-14 -10 H14 M-22 14 H22" class="faint"/><path d="M-48 36 H48"/>',
-    bars: '<path d="M-36 40 V12 M-12 40 V-10 M12 40 V-26 M36 40 V-46"/><path d="M-50 40 H50" class="faint"/>',
-    board: '<rect x="-34" y="-40" width="68" height="84"/><path d="M-14 -48 H14 V-34 H-14 Z"/><path d="M-20 -14 H20 M-20 4 H20 M-20 22 H8" class="faint"/>',
-    clock: '<circle cy="6" r="40"/><path d="M0 6 V-16 M0 6 L16 16"/><path d="M-10 -46 H10 M0 -46 V-34" class="faint"/>'
-  };
-  const glyph = key => `<svg viewBox="-70 -70 140 140" class="glyph-art" aria-hidden="true">${GLYPHS[key] || ''}</svg>`;
-
   root.LHArena = {
-    portrait, glyph,
-    mount, update,
+    portrait, mount, update,
     hit: crit => pulse(crit ? 'crit' : 'hit', crit ? 700 : 400),
     taunt: () => pulse('taunt', 900)
   };

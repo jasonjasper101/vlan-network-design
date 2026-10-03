@@ -4,11 +4,11 @@
   'use strict';
 
   const TYPES = {
-    recall:   { label: 'Recall',          base: 5,  tier: 'Light' },
-    scenario: { label: 'Scenario',        base: 8,  tier: 'Medium' },
-    order:    { label: 'Put in order',    base: 9,  tier: 'Medium' },
-    calc:     { label: 'Calculate',       base: 10, tier: 'Heavy' },
-    output:   { label: 'Read the output', base: 12, tier: 'Heavy' }
+    recall:   { label: 'Recall',          base: 5,  tier: 'Bronze' },
+    scenario: { label: 'Scenario',        base: 8,  tier: 'Silver' },
+    order:    { label: 'Put in order',    base: 9,  tier: 'Silver' },
+    calc:     { label: 'Calculate',       base: 10, tier: 'Gold' },
+    output:   { label: 'Read the output', base: 12, tier: 'Gold' }
   };
 
   const START_NINES = 5;     // 99.999%
@@ -89,12 +89,23 @@
     return accepted.some(a => normalize(q.kind, a) === got);
   }
 
+  // Placeholders. The examples deliberately match no answer in the bank.
   const INPUT_HELP = {
-    ipv4: 'dotted decimal, e.g. 10.0.0.1',
-    mask: '/n or a dotted mask',
-    ipv6: 'any valid IPv6 notation',
-    hex: 'colon-separated hex groups',
-    number: 'a whole number'
+    ipv4: 'An address, like 10.0.0.1',
+    mask: 'A prefix or mask, like /20 or 255.255.240.0',
+    ipv6: 'An IPv6 address, like 2001:db8::1',
+    hex: 'Four hex groups, like 1a2b:3cff:fe4d:5e6f',
+    number: 'A whole number',
+    text: 'Your answer'
+  };
+  // Shown when input can't be read as this kind of answer. It never costs uptime.
+  const INPUT_ERROR = {
+    ipv4: "That isn't an IPv4 address. Enter four numbers from 0 to 255 separated by dots.",
+    mask: "That isn't a prefix or a mask. Enter something like /20 or 255.255.240.0.",
+    ipv6: "That isn't an IPv6 address. Use eight hex groups, or shorten a run of zeros with ::.",
+    hex: "That isn't four hex groups. Separate them with colons.",
+    number: "That isn't a whole number.",
+    text: 'Type an answer first.'
   };
 
   /* ---------- seeded RNG so runs are testable ---------- */
@@ -322,19 +333,29 @@
     progress.srs[q.id] = { box: correct ? Math.min(s.box + 1, 4) : 0, seen: Date.now() };
   }
 
-  /** 'none' | 'down' | 'degraded' | 'up', the same vocabulary as link state. */
+  const MIN_SAMPLE = 3;
+
+  /** 'none' | 'few' | 'down' | 'degraded' | 'up', the same vocabulary as link state.
+      'few' means fewer than three answers: too little to rate. */
   function masteryState(m) {
     if (!m || !m.a) return 'none';
+    if (m.recent.length < MIN_SAMPLE) return 'few';
     const r = m.recent.reduce((s, x) => s + x, 0) / m.recent.length;
-    if (m.recent.length >= 3 && r >= 0.8) return 'up';
+    if (r >= 0.8) return 'up';
     if (r >= 0.5) return 'degraded';
     return 'down';
   }
 
+  /** 0-99 rating from the last eight answers, or null when there are fewer than three. */
+  function masteryRating(m) {
+    if (!m || m.recent.length < MIN_SAMPLE) return null;
+    return Math.round((m.recent.reduce((s, x) => s + x, 0) / m.recent.length) * 99);
+  }
+
   const api = {
-    TYPES, TIMER, START_NINES, FLOOR_NINES, MISS_COST, HINT_COST, HP_PER_WEIGHT, INPUT_HELP,
+    TYPES, TIMER, START_NINES, FLOOR_NINES, MISS_COST, HINT_COST, CRIT_MULT, HP_PER_WEIGHT, AFTERSHOCK_GAP, INPUT_HELP, INPUT_ERROR,
     uptimePct, fmtUptime, streakMult, parseIPv4, parsePrefix, expandIPv6, hexGroups,
-    normalize, checkTyped, rng, shuffle, Run, recordResult, masteryState
+    normalize, checkTyped, rng, shuffle, Run, recordResult, masteryState, masteryRating, MIN_SAMPLE
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LH = api;

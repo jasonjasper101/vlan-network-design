@@ -22,7 +22,7 @@
       "title": "/28 as a dotted mask",
       "prompt": "Type the dotted-decimal subnet mask for a /28.",
       "kind": "ipv4", "answer": "255.255.255.240",
-      "hint": "28 one-bits = 8 + 8 + 8 + 4. What are four 1-bits worth in one octet?",
+      "hint": "28 one-bits = 8 + 8 + 8 + 4. Add the top four bit values of an octet: 128, 64, 32, 16.",
       "explain": "28 one-bits fill three octets (24 bits) and the top 4 bits of the last octet: 128 + 64 + 32 + 16 = 240. The mask is 255.255.255.240."
     },
     {
@@ -51,7 +51,7 @@
       ],
       "answer": 0,
       "hint": "Think about what happens when a segment is lost.",
-      "explain": "TCP is connection-oriented and reliable. It sequences data, acknowledges it and retransmits what is lost. UDP sends and forgets, which suits voice, video and DNS queries."
+      "explain": "TCP is connection-oriented and reliable. It sequences data, acknowledges it and retransmits what is lost. UDP sends without acknowledgments, which suits voice, video and DNS queries."
     },
     {
       "id": "nf-006", "obj": "1.3", "type": "recall", "diff": 1,
@@ -64,12 +64,12 @@
         { "t": "Cat 8 twisted pair", "why": "Cat 8 is built for 25/40 Gbps inside data centers and only reaches about 30 m." }
       ],
       "answer": 0,
-      "hint": "Distance in kilometers rules out copper. Which fiber has the narrow core?",
+      "hint": "Copper is out at this distance. Pick the fiber with the narrow core.",
       "explain": "Single-mode fiber has a small (about 9 micron) core and uses laser light, so a single path of light travels kilometers. Multimode is for runs inside a building or campus."
     },
     {
       "id": "nf-007", "obj": "1.1", "type": "recall", "diff": 1,
-      "title": "Who splits broadcast domains",
+      "title": "Broadcast domain boundary",
       "prompt": "Which device separates broadcast domains by default?",
       "choices": [
         { "t": "Router", "why": "" },
@@ -134,7 +134,7 @@
         { "t": "Provide stronger isolation than VMs", "why": "Because containers share a kernel, their isolation is generally weaker than a VM's hardware-level isolation." }
       ],
       "answer": 0,
-      "hint": "Why do containers start in milliseconds while VMs take a minute?",
+      "hint": "Containers start in milliseconds because they skip booting a guest OS.",
       "explain": "Containers package an application and its dependencies but share the host kernel. That makes them lightweight and fast to start, at the cost of weaker isolation than VMs."
     },
     {
@@ -167,7 +167,7 @@
     },
     {
       "id": "nf-014", "obj": "1.1", "type": "recall", "diff": 1,
-      "title": "Inline and blocking",
+      "title": "IDS or IPS",
       "prompt": "Which component sits inline in the traffic path and drops packets that match attack signatures?",
       "choices": [
         { "t": "IPS", "why": "" },
@@ -176,7 +176,7 @@
         { "t": "Layer 2 switch", "why": "A switch forwards frames by MAC address and doesn't inspect payloads for attack signatures." }
       ],
       "answer": 0,
-      "hint": "Detection only versus prevention.",
+      "hint": "An IDS only detects. Find the device that can also block.",
       "explain": "An intrusion prevention system sits inline, so it can block traffic as it inspects it. An IDS only detects and alerts."
     },
     {
@@ -218,7 +218,7 @@
     },
     {
       "id": "nf-019", "obj": "1.6", "type": "calc", "diff": 2,
-      "title": "VLSM: where HR lands",
+      "title": "VLSM network for HR",
       "prompt": "VLSM on 10.10.10.0/24, allocated largest first with no gaps: Sales 110 hosts, Marketing 52, HR 23. Type HR's network address.",
       "kind": "ipv4", "answer": "10.10.10.192",
       "hint": "Size each department, then lay them down biggest first from .0.",
@@ -306,7 +306,7 @@
     },
     {
       "id": "nf-024", "obj": "1.13", "type": "order", "diff": 2,
-      "title": "Inside the switch",
+      "title": "Switch frame-handling order",
       "prompt": "Put a switch's handling of an incoming frame in order.",
       "items": [
         "Receive the frame and check the FCS",
@@ -354,12 +354,12 @@
     },
     {
       "id": "nf-028", "obj": "1.1", "type": "recall", "diff": 2,
-      "title": "Powering a hungry AP",
+      "title": "PoE standard for 25.5 W",
       "prompt": "An access point needs 25.5 W delivered at the device. What is the minimum PoE standard the switch must support?",
       "choices": [
         { "t": "802.3at (PoE+)", "why": "" },
         { "t": "802.3af (PoE)", "why": "802.3af supplies 15.4 W at the switch port and guarantees only 12.95 W at the device." },
-        { "t": "802.3ad", "why": "802.3ad is link aggregation (LACP), not Power over Ethernet. It is a classic name mix-up." },
+        { "t": "802.3ad", "why": "802.3ad is link aggregation (LACP), not Power over Ethernet. The similar numbers make it easy to confuse." },
         { "t": "802.3bt Type 4", "why": "802.3bt Type 4 delivers up to 90 W at the switch. It would work, but the question asks for the minimum." }
       ],
       "answer": 0,
@@ -380,7 +380,7 @@
       "prompt": "What is the default aging time for dynamic MAC address table entries on a Cisco Catalyst switch?",
       "choices": [
         { "t": "300 seconds", "why": "" },
-        { "t": "4 hours", "why": "4 hours is the default ARP cache timeout on a Cisco router. It is a common mix-up with MAC aging." },
+        { "t": "4 hours", "why": "4 hours is the default ARP cache timeout on a Cisco router. It is easy to confuse with MAC aging." },
         { "t": "60 seconds", "why": "Too short. The Catalyst default is five minutes." },
         { "t": "Entries never age out", "why": "Only static entries persist. Dynamic entries are removed after the aging timer expires with no frames from that MAC." }
       ],
@@ -390,7 +390,7 @@
     },
     {
       "id": "nf-031", "obj": "1.13", "type": "output", "diff": 2,
-      "title": "Where is PC-C really?",
+      "title": "Find PC-C in the MAC table",
       "prompt": "PC-C (MAC 0050.7966.6803) should be patched directly into Fa0/4 on this switch. Click the line that shows it is actually reached through the uplink to another switch.",
       "terminal": {
         "prompt": "SW-MKT#",
@@ -417,7 +417,7 @@
         "9": "00e0.f71a.2b01 is another device behind the uplink (the router's MAC), not PC-C."
       },
       "hint": "Match the MAC, then read the port column.",
-      "explain": "PC-C's MAC was learned on Gi0/1, the uplink. It is plugged in somewhere downstream, not into Fa0/4. Several MACs on one port is the signature of a link to another switch."
+      "explain": "PC-C's MAC was learned on Gi0/1, the uplink. It is plugged in somewhere downstream, not into Fa0/4. Several MACs on one access port means another switch is behind it."
     },
     {
       "id": "nf-032", "obj": "1.11", "type": "recall", "diff": 2,
@@ -435,7 +435,7 @@
     },
     {
       "id": "nf-033", "obj": "1.11", "type": "recall", "diff": 2,
-      "title": "RF behavior",
+      "title": "Signal off a metal cabinet",
       "prompt": "A Wi-Fi signal bounces off a metal filing cabinet and reaches the client over a second path. What is this called?",
       "choices": [
         { "t": "Reflection", "why": "" },
@@ -472,7 +472,7 @@
         { "t": "All three layers", "why": "Merging everything is a flat single-switch network, not a two-tier design." }
       ],
       "answer": 0,
-      "hint": "Two tiers: one is where users plug in.",
+      "hint": "There are two tiers, and one of them is where users plug in.",
       "explain": "A collapsed core merges the core and distribution layers into one tier, leaving a separate access layer. It suits campuses too small to justify a dedicated core."
     },
     {
@@ -486,7 +486,7 @@
         { "t": "All DNS traffic uses UDP 53", "why": "Zone transfers (AXFR) and truncated responses fall back to TCP 53." }
       ],
       "answer": 0,
-      "hint": "Small and fast versus large and reliable.",
+      "hint": "Queries are small. Zone transfers are large.",
       "explain": "DNS uses port 53 on both transports. Clients query over UDP. Servers use TCP for zone transfers and when a response is too large for UDP."
     },
     {
@@ -538,7 +538,7 @@
         "8": "This is the solicited-node multicast group. It is derived from the address but doesn't say how the address was built."
       },
       "hint": "IOS tags the address with how it was formed.",
-      "explain": "IOS marks addresses configured with ipv6 address 2001:DB8:ACAD:10::/64 eui-64 with [EUI]. The FFFE in the middle of the interface ID is the other giveaway."
+      "explain": "IOS marks addresses configured with ipv6 address 2001:DB8:ACAD:10::/64 eui-64 with [EUI]. The FFFE in the middle of the interface ID also shows EUI-64."
     },
     {
       "id": "nf-040", "obj": "1.6", "type": "calc", "diff": 3,
@@ -566,7 +566,7 @@
     },
     {
       "id": "nf-043", "obj": "1.4", "type": "output", "diff": 3,
-      "title": "The slow uplink",
+      "title": "Duplex mismatch on Fa0/24",
       "prompt": "Users behind SW-HR Fa0/24 report a slow, unreliable link. The far end is hard-set to full duplex. Click the line that proves a duplex mismatch from this side.",
       "terminal": {
         "prompt": "SW-HR#",
@@ -593,7 +593,7 @@
         "9": "Normal collisions are expected on any half-duplex link. Only late collisions show the far end is transmitting without listening."
       }
     ,
-      "hint": "Ordinary collisions are normal on half duplex. Which kind isn't?",
+      "hint": "Ordinary collisions are normal on half duplex. Late collisions are not.",
       "explain": "Late collisions (after the first 64 bytes) happen when the far end transmits without CSMA/CD, which is what a full-duplex neighbor does. Late collisions on the half side plus CRC/runts on the full side is the duplex mismatch signature. Fix it by setting both ends to auto, or both to the same fixed values."
     },
     {
@@ -648,12 +648,12 @@
         "1": "The MAC address is normal and doesn't affect which destinations the host treats as local.",
         "4": "The IPv6 link-local address is unrelated to IPv4 reachability to Sales."
       },
-      "hint": "What does the host believe is on its own wire?",
+      "hint": "Compare the host's prefix length with the /26 it should have.",
       "explain": "The host has a /24 instead of a /26. It treats all of 10.10.10.0 to .255 as on-link, so for a Sales host like 10.10.10.10 it sends an ARP request directly instead of going to the gateway. Nobody on the Marketing segment answers. The gateway works only because .190 is inside both masks."
     },
     {
       "id": "nf-046", "obj": "1.4", "type": "scenario", "diff": 3,
-      "title": "Hard-coded on one side",
+      "title": "Fixed speed on one side",
       "prompt": "Switch A's port is hard-coded to 100 Mbps full duplex. Switch B's port is left on auto. What happens?",
       "choices": [
         { "t": "B detects 100 Mbps but falls back to half duplex, creating a duplex mismatch", "why": "" },
@@ -663,7 +663,7 @@
       ],
       "answer": 0,
       "hint": "Autonegotiation needs both sides to talk.",
-      "explain": "With autonegotiation off on A, B uses parallel detection. It can sense 100 Mbps, but duplex can't be sensed, so B falls back to half duplex at 10/100. Result: A full, B half, which is a duplex mismatch. Set both sides the same way."
+      "explain": "With autonegotiation off on A, B uses parallel detection. It can sense 100 Mbps, but duplex can't be sensed, so B falls back to half duplex at 10/100. A runs full duplex and B runs half, which is a duplex mismatch. Set both sides the same way."
     },
     {
       "id": "nf-047", "obj": "1.8", "type": "calc", "diff": 3,

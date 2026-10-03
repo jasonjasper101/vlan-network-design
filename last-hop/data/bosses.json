@@ -10,19 +10,19 @@
       "theme": "Hides real boundaries",
       "weakPoints": ["1.6", "1.9", "1.4", "1.10"],
       "lines": {
-        "intro": "Every boundary you trust is a lie. Your /24 is whatever I say it is.",
-        "phase2": "You found the edge of one subnet. There are sixty-three more where that came from.",
-        "phase3": "No more counting on your fingers. Prove the math, on the clock.",
-        "crit": "You see through me...",
-        "win": "The boundary... was real.",
-        "lose": "Uptime breached SLA. The Mask redraws your network."
+        "intro": "Call it a /24 if you like. I drew it as a /26.",
+        "phase2": "One subnet down. Sixty-three /30s to go.",
+        "phase3": "Now do the math with the clock running.",
+        "crit": "You found one of my boundaries.",
+        "win": "That was the real boundary.",
+        "lose": "You are under the SLA. Your subnets are mine now."
       }
     },
-    { "id": "loop", "name": "The Loop", "domain": "2.0", "weight": 20, "available": false, "theme": "Broadcast storm" },
-    { "id": "blackhole", "name": "The Black Hole", "domain": "3.0", "weight": 25, "available": false, "theme": "Routes vanish" },
-    { "id": "rogue", "name": "The Rogue", "domain": "4.0", "weight": 10, "available": false, "theme": "Fake DHCP, NAT confusion" },
-    { "id": "intruder", "name": "The Intruder", "domain": "5.0", "weight": 15, "available": false, "theme": "ACLs, port security, AAA" },
-    { "id": "script", "name": "The Script", "domain": "6.0", "weight": 10, "available": false, "theme": "Controllers, REST, JSON" },
-    { "id": "outage", "name": "The Outage", "domain": "all", "weight": 0, "available": false, "theme": "Adapts to your weak spots" }
+    { "id": "loop", "name": "The Loop", "domain": "2.0", "weight": 20, "available": false, "theme": "Broadcast storm", "log": ["%SW_MATM-4-MACFLAP_NOTIF:", "Host 0050.7966.6801", "in vlan 10 is flapping"] },
+    { "id": "blackhole", "name": "The Black Hole", "domain": "3.0", "weight": 25, "available": false, "theme": "Routes vanish", "log": ["R1#sh ip route 172.16.9.0", "% Network not in table"] },
+    { "id": "rogue", "name": "The Rogue", "domain": "4.0", "weight": 10, "available": false, "theme": "Fake DHCP, NAT confusion", "log": ["%DHCP_SNOOPING-5-", "DHCP_SNOOPING_", "UNTRUSTED_PORT"] },
+    { "id": "intruder", "name": "The Intruder", "domain": "5.0", "weight": 15, "available": false, "theme": "ACLs, port security, AAA", "log": ["%PORT_SECURITY-2-", "PSECURE_VIOLATION:", "Security violation"] },
+    { "id": "script", "name": "The Script", "domain": "6.0", "weight": 10, "available": false, "theme": "Controllers, REST, JSON", "log": ["HTTP/1.1 401", "Unauthorized"] },
+    { "id": "outage", "name": "The Outage", "domain": "all", "weight": 0, "available": false, "theme": "Targets your lowest-rated topics", "log": ["%LINK-3-UPDOWN:", "Interface Gi0/1,", "changed state to down"] }
   ]
 }
