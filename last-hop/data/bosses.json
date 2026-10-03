@@ -1,0 +1,28 @@
+{
+  "bosses": [
+    {
+      "id": "mask",
+      "name": "The Mask",
+      "domain": "1.0",
+      "weight": 20,
+      "available": true,
+      "questions": "data/questions/fundamentals.json",
+      "theme": "Hides real boundaries",
+      "weakPoints": ["1.6", "1.9", "1.4", "1.10"],
+      "lines": {
+        "intro": "Call it a /24 if you like. I drew it as a /26.",
+        "phase2": "One subnet down. Sixty-three /30s to go.",
+        "phase3": "Now do the math with the clock running.",
+        "crit": "You found one of my boundaries.",
+        "win": "That was the real boundary.",
+        "lose": "You are under the SLA. Your subnets are mine now."
+      }
+    },
+    { "id": "loop", "name": "The Loop", "domain": "2.0", "weight": 20, "available": false, "theme": "Broadcast storm", "log": ["%SW_MATM-4-MACFLAP_NOTIF:", "Host 0050.7966.6801", "in vlan 10 is flapping"] },
+    { "id": "blackhole", "name": "The Black Hole", "domain": "3.0", "weight": 25, "available": false, "theme": "Routes vanish", "log": ["R1#sh ip route 172.16.9.0", "% Network not in table"] },
+    { "id": "rogue", "name": "The Rogue", "domain": "4.0", "weight": 10, "available": false, "theme": "Fake DHCP, NAT confusion", "log": ["%DHCP_SNOOPING-5-", "DHCP_SNOOPING_", "UNTRUSTED_PORT"] },
+    { "id": "intruder", "name": "The Intruder", "domain": "5.0", "weight": 15, "available": false, "theme": "ACLs, port security, AAA", "log": ["%PORT_SECURITY-2-", "PSECURE_VIOLATION:", "Security violation"] },
+    { "id": "script", "name": "The Script", "domain": "6.0", "weight": 10, "available": false, "theme": "Controllers, REST, JSON", "log": ["HTTP/1.1 401", "Unauthorized"] },
+    { "id": "outage", "name": "The Outage", "domain": "all", "weight": 0, "available": false, "theme": "Targets your lowest-rated topics", "log": ["%LINK-3-UPDOWN:", "Interface Gi0/1,", "changed state to down"] }
+  ]
+}
