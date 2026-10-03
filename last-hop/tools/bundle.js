@@ -19,14 +19,15 @@ const data = JSON.stringify({ blueprint, bosses, banks }).replace(/<\//g, '<\\/'
 
 const html = read('index.html');
 const body = html.split('<!--BODY-->')[1].split('<!--/BODY-->')[0].trim();
-const fonts = html.match(/<link rel="stylesheet" href="https:\/\/fonts[^>]+>/)[0];
+// Fonts are self-hosted; inline them so the file needs no network at all.
+const css = read('css/style.css').replace(/url\(\.\.\/fonts\/([^)]+\.woff2)\)/g, (m, f) =>
+  `url(data:font/woff2;base64,${fs.readFileSync(path.join(root, 'fonts', f)).toString('base64')})`);
 const scripts = ['js/engine.js', 'js/audio.js', 'js/arena.js', 'js/app.js']
   .map(f => `<script>\n${read(f).replace(/<\/script/g, '<\\/script')}\n</script>`).join('\n');
 
 const head = `<title>LAST HOP</title>
-${fonts}
 <style>
-${read('css/style.css')}
+${css}
 </style>`;
 const tail = `<script>window.LH_DATA = ${data};</script>\n${scripts}`;
 

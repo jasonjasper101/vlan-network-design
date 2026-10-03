@@ -16,7 +16,7 @@ python3 -m http.server 8000
 
 It is plain HTML, CSS and JS with no build step, so GitHub Pages can host it as is.
 
-To get a single self-contained file (questions inlined, no server needed):
+To get a single self-contained file (questions and fonts inlined, no server or network needed):
 
 ```sh
 node tools/bundle.js dist/last-hop.html
@@ -40,7 +40,7 @@ Every action works with a mouse, a touch screen or a key. On a keyboard, the bar
 | `X` / `H` | Packet Capture / TAC Case |
 | `R` | Reload, right after a miss |
 
-## How a fight works
+## How a match works
 
 | Mechanic | Rule |
 |---|---|
@@ -49,7 +49,7 @@ Every action works with a mouse, a touch screen or a key. On a keyboard, the bar
 | Damage | Base by type × (0.7 + 0.3 × difficulty) × weak point × streak. Bronze cards: Recall 5. Silver: Scenario 8, Put in order 9. Gold: Calculate 10, Read the output 12. |
 | Phases | At 66% HP, difficulty-2 questions. At 33%, difficulty 3 with a clock (20 to 45 s by type). |
 | Weak points | 4 hidden topics per boss take ×1.8 damage. Answering one correctly reveals it for every later match. |
-| Uptime | You start at 99.999% (5 nines). A miss costs 0.5 nines. Below 90.000% the SLA is breached. |
+| Uptime | You start at 99.999% (5 nines). A miss costs 0.5 nines. At 90.000% the SLA is breached and the match is lost. |
 | Streak | Each consecutive correct answer adds +0.2× damage, up to ×2.0. A miss resets it. |
 | Aftershocks | A missed question returns 3 turns later and has to be cleared. Questions missed in earlier matches come up first. |
 | Items | Packet Capture ×2 removes wrong options. TAC Case ×3 gives a hint for 0.2 nines (and 10 s on the clock). Reload ×1 undoes a miss. |
@@ -72,6 +72,7 @@ data/bosses.json           roster, weak points, boss dialogue
 data/questions/*.json      one question bank per domain
 tools/validate.js          schema check, math recomputation, run simulation
 tools/bundle.js            single-file build
+fonts/                     self-hosted Barlow, Barlow Condensed and IBM Plex Mono (SIL OFL, see fonts/OFL.txt)
 ```
 
 ## Adding questions

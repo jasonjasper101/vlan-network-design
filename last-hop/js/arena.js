@@ -57,7 +57,9 @@
     return `<svg viewBox="-140 -160 280 336" class="portrait" aria-hidden="true">${maskFigure('192')}</svg>`;
   }
 
-  let svg, links = {}, bossG, glitchAnim = null, glitchOn = false, lastStates = {}, ro = null;
+  let svg, links = {}, bossG, lastStates = {}, ro = null;
+  // Half-height of each node shape, so a label can start just below it at any scale.
+  const HALF = { pc: 14, sw: 13, rt: 20 };
 
   function nodeShape(g, n) {
     const s = el('g', { transform: `translate(${n.x},${n.y})`, class: 'node' }, g);
@@ -73,18 +75,10 @@
       el('circle', { r: 20 }, s);
       el('path', { d: 'M-13 -13 L-4 -4 M-4 -9 L-4 -4 L-9 -4 M13 13 L4 4 M4 9 L4 4 L9 4 M4 -4 L13 -13 M8 -13 L13 -13 L13 -8 M-4 4 L-13 13 M-8 13 L-13 13 L-13 8', class: 'glyph' }, s);
     }
-    const ly = n.t === 'pc' ? 26 : n.t === 'sw' ? 28 : 34;
-    el('text', { y: ly, class: `nlabel ${n.t}`, 'text-anchor': 'middle' }, s).textContent = n.l;
+    el('text', { y: HALF[n.t] + 4, class: `nlabel ${n.t}${n.x > 400 ? ' far' : ''}`, 'text-anchor': 'middle', 'data-half': HALF[n.t] }, s).textContent = n.l;
   }
 
   function bossFigure() {
-    const defs = el('defs', {}, svg);
-    const glitch = el('filter', { id: 'glitch', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
-    const turb = el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.02 0.4', numOctaves: 1, seed: 3, result: 'n' }, glitch);
-    glitchAnim = el('animate', { attributeName: 'seed', values: '1;5;9;2;7', dur: '1.2s', repeatCount: 'indefinite', begin: 'indefinite' }, turb);
-    el('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: 6 }, glitch);
-    glitchOn = false;
-
     bossG = el('g', { transform: 'translate(810,236)', class: 'boss' }, svg);
     const body = el('g', { class: 'boss-body' }, bossG);
     body.innerHTML = maskFigure(LAST_OCTET[1]);
@@ -97,6 +91,7 @@
     const k = Math.max(1000 / r.width, 470 / r.height);
     svg.style.setProperty('--k', k.toFixed(3));
     svg.classList.toggle('compact', k > 1.9);
+    svg.querySelectorAll('.nlabel').forEach(t => t.setAttribute('y', (+t.dataset.half + 4 * k).toFixed(1)));
   }
 
   function mount(target) {
@@ -106,8 +101,8 @@
     const bg = el('g', { class: 'bg' }, svg);
     el('rect', { x: 400, y: 0, width: 600, height: 470, class: 'corrupt-zone' }, bg);
     el('line', { x1: 400, y1: 10, x2: 400, y2: 460, class: 'front' }, bg);
-    el('text', { x: 16, y: 460, class: 'zone-label' }, bg).textContent = 'YOUR NETWORK';
-    el('text', { x: 984, y: 460, class: 'zone-label', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
+    el('text', { x: 16, y: 22, class: 'zone-label' }, bg).textContent = 'YOUR NETWORK';
+    el('text', { x: 984, y: 22, class: 'zone-label', 'text-anchor': 'end' }, bg).textContent = 'CONTESTED';
 
     const lg = el('g', { class: 'links' }, svg);
     const ng = el('g', { class: 'nodes' }, svg);
@@ -169,10 +164,6 @@
     if (last && last.textContent !== octet) {
       last.textContent = octet;
       bossG.querySelector('.band-text').textContent = `255.255.255.${octet}`;
-    }
-    if (phase === 3 && hpFrac > 0 && !glitchOn && glitchAnim && glitchAnim.beginElement) {
-      glitchOn = true;
-      try { glitchAnim.beginElement(); } catch (e) { /* SMIL unavailable: the filter still applies */ }
     }
   }
 

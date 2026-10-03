@@ -33,12 +33,28 @@
   const allObjectives = () => DATA.blueprint.domains.flatMap(d => d.objectives);
 
   /* ---------- shared bits ---------- */
-  const TYPE_CODE = { recall: 'REC', scenario: 'SCN', order: 'ORD', calc: 'CAL', output: 'SHO' };
+  const TYPE_SHORT = { recall: 'Recall', scenario: 'Scenario', order: 'Order', calc: 'Calc', output: 'Output' };
   const TIER_CLASS = { Bronze: 'bronze', Silver: 'silver', Gold: 'gold' };
   const BOSS_CODE = { mask: 'MSK', loop: 'LOP', blackhole: 'BHL', rogue: 'RGE', intruder: 'INT', script: 'SCR', outage: 'OTG' };
   const MODE_NAME = { run: 'Boss match', practice: 'Practice' };
   const pips = d => `<span class="pips" role="img" aria-label="Difficulty ${d} of 3">${[1, 2, 3].map(i => `<i class="${i <= d ? 'on' : ''}"></i>`).join('')}</span>`;
-  const keys = list => list.map(k => `<kbd class="${k.length > 2 ? 'wide' : ''}">${esc(k)}</kbd>`).join('');
+  // Arrow and Enter keycaps are drawn, so they match the keycap weight on every OS.
+  const KEY_ICON = {
+    '↑': '<path d="M5 9V2M2 5l3-3 3 3"/>', '↓': '<path d="M5 1v7M2 5l3 3 3-3"/>',
+    '←': '<path d="M9 5H2M5 2L2 5l3 3"/>', '→': '<path d="M1 5h7M5 2l3 3-3 3"/>',
+    '↵': '<path d="M8 1v5H2M4.5 3.5L2 6l2.5 2.5"/>'
+  };
+  const KEY_NAME = { '↑': 'Up', '↓': 'Down', '←': 'Left', '→': 'Right', '↵': 'Enter' };
+  const keys = list => list.map(k => KEY_ICON[k]
+    ? `<kbd aria-label="${KEY_NAME[k]}"><svg viewBox="0 0 10 10" aria-hidden="true">${KEY_ICON[k]}</svg></kbd>`
+    : `<kbd class="${k.length > 2 ? 'wide' : ''}">${esc(k)}</kbd>`).join('');
+  // Card titles: an address and its prefix may break only before the slash, never inside a number.
+  const titleHtml = t => esc(t).replace(/(\d+(?:\.\d+){3})(\/\d+)?/g, (m, ip, pre) => `<span class="nb">${ip}</span>${pre ? `<wbr><span class="nb">${pre}</span>` : ''}`);
+  // Ignore a click that lands on a control which appeared under the pointer a moment ago (a double-click).
+  let swapAt = 0;
+  const markSwap = () => { swapAt = performance.now(); };
+  const fresh = e => e.detail > 1 || performance.now() - swapAt < 300;
+  const focusInView = el => { if (!el) return; el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest' }); };
 
   /** One rating badge for every screen. m = { a, c, recent[] } */
   function badge(m) {
@@ -95,7 +111,7 @@
   // One selection cursor: hovering a control moves focus to it, so mouse and keyboard never highlight two things.
   document.addEventListener('pointerover', e => {
     if (e.pointerType !== 'mouse') return;
-    const el = e.target.closest('.btn, .tile, .ccard:not(.locked):not(.static), .choice, .tab, .item, .pool-item, .seq-item, button.tline, button.rule, .top-btn');
+    const el = e.target.closest('#screen .btn, .tile, button.ccard, .choice, .item, .pool-item, .seq-item, button.tline, button.rule, .dom-row summary');
     const active = document.activeElement;
     if (!el || el === active || el.disabled) return;
     if (active && active.matches('input, textarea')) return;
@@ -111,7 +127,7 @@
       ? `<span class="cc-art">${LHArena.portrait()}</span>`
       : `<span class="cc-log" aria-hidden="true">${(b.log || []).map(esc).join('<br>')}</span>`;
     const stats = b.available
-      ? `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span><span><b>${bank.length}</b>QNS</span><span><b>${b.weakPoints.length}</b>WPT</span>`
+      ? `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span><span><b>${bank.length}</b>Qs</span><span><b>${b.weakPoints.length}</b>Weak</span>`
       : `<span><b>${b.weight * LH.HP_PER_WEIGHT}</b>HP</span>`;
     const tag = b.available ? 'button' : 'div';
     return `<${tag} class="ccard ${tier}" ${b.available ? `data-boss="${b.id}"` : 'role="img"'} aria-label="${esc(b.name)}, ${b.weight}% of the exam${b.available ? '' : ', locked'}">
@@ -186,8 +202,8 @@
           ${bossCard(next)}
           <div class="roster-more">
             <ul>
-              ${rest.map(x => `<li><span class="mono muted">${x.domain === 'all' ? 'ALL' : esc(x.domain)}</span><span>${esc(x.name)}${x.weight ? `, ${x.weight}% of the exam` : `: ${esc(x.theme.toLowerCase())}`}</span><span class="lock">Locked</span></li>`).join('')}
-              <li><span class="mono muted">EXAM</span><span>Exam mode: 100 questions in 120 minutes, scored by domain</span><span class="lock">Locked</span></li>
+              ${rest.map(x => `<li><span class="mono muted">${x.domain === 'all' ? 'ALL' : esc(x.domain)}</span><span>${esc(x.name)}${x.weight ? `, ${x.weight}% of the exam` : `: ${esc(x.theme.toLowerCase())}`}</span><span class="lock-chip">Locked</span></li>`).join('')}
+              <li><span class="mono muted">EXAM</span><span>Exam mode: 100 questions in 120 minutes, scored by domain</span><span class="lock-chip">Locked</span></li>
             </ul>
             <p class="small muted pad-top">The other bosses and Exam mode unlock as their questions are written.</p>
           </div>
@@ -206,7 +222,7 @@
   /* ================================================================
      MATCH SETUP
      ================================================================ */
-  function setup(id, mode) {
+  function setup(id, mode, focusOn) {
     setup.mode = mode;
     const b = DATA.bosses.find(x => x.id === id);
     const bank = DATA.banks[id];
@@ -219,14 +235,12 @@
           <div class="versus">
             <div class="side you">
               <span class="crest">NOC</span>
-              <span class="team-bar"></span>
               <span class="side-name">On-call</span>
-              <span class="side-meta"><span>Uptime ${fmtUptime(START_NINES)}</span><span>${practice ? 'Unlimited TAC Case hints' : 'Packet Capture ×2, TAC Case ×3, Reload ×1'}</span></span>
+              <span class="side-meta"><span>Uptime ${fmtUptime(START_NINES)}</span><span>${practice ? 'Unlimited Packet Capture and TAC Case. No Reload.' : 'Packet Capture ×2, TAC Case ×3, Reload ×1'}</span></span>
             </div>
             <span class="vs" aria-hidden="true">VS</span>
             <div class="side boss">
               ${LHArena.portrait()}
-              <span class="team-bar"></span>
               <span class="side-name">${esc(b.name)}</span>
               <span class="side-meta"><span>${b.weight * LH.HP_PER_WEIGHT} HP</span><span>Domain ${esc(b.domain)}, ${b.weight}% of the exam</span></span>
             </div>
@@ -236,7 +250,7 @@
         <div class="rules">
           <h3>Match rules</h3>
           <button class="rule" id="mode" aria-label="Mode: ${MODE_NAME[mode]}. Activate to switch.">
-            <span class="rule-name">Mode<small>${practice ? 'Ratings still update. Best uptime is not saved.' : 'Counts toward best uptime. Drop below 90% and you lose.'}</small></span>
+            <span class="rule-name">Mode<small>${practice ? 'Ratings still update. Best uptime is not saved.' : 'Counts toward best uptime. Fall to 90% and you lose.'}</small></span>
             <span class="rule-val stepper"><i aria-hidden="true">‹</i>${MODE_NAME[mode]}<i aria-hidden="true">›</i></span>
           </button>
           <div class="rule"><span class="rule-name">Clock<small>Starts when the boss drops below 33% HP</small></span><span class="rule-val">${practice ? 'Off' : 'Phase 3'}</span></div>
@@ -253,11 +267,10 @@
       </section>`,
       [['↵', 'Select'], [['←', '→'], 'Change mode'], ['Esc', 'Back']]);
     setTab('match');
-    const flip = () => { sfx.select(); setup(id, practice ? 'run' : 'practice'); $('#mode').focus({ preventScroll: true }); };
-    $('#mode').addEventListener('click', flip);
+    $('#mode').addEventListener('click', () => { sfx.select(); setup(id, practice ? 'run' : 'practice', 'mode'); });
     $('#kickoff').addEventListener('click', () => battle(id, mode));
     $('#back').addEventListener('click', home);
-    $('#kickoff').focus({ preventScroll: true });
+    focusInView($(focusOn === 'mode' ? '#mode' : '#kickoff'));
   }
 
   /* ================================================================
@@ -267,9 +280,9 @@
     const rows = [
       ['Start uptime', fmtUptime(START_NINES), 'Five nines. Uptime is your health.'],
       ['Each miss', `−${MISS_COST} nines`, 'A timeout counts as a miss.'],
-      ['Match lost', `Below ${fmtUptime(FLOOR_NINES)}`, 'The SLA is breached.'],
+      ['Match lost', `At ${fmtUptime(FLOOR_NINES)}`, 'Uptime reaches the SLA floor.'],
       ['Streak bonus', '+0.2× per hit', 'Up to ×2.0. A miss resets it.'],
-      ['Weak point hit', `×${CRIT_MULT} damage`, 'Four hidden topics per boss. Found ones stay found.'],
+      ['Weak point hit', `×${CRIT_MULT} damage`, 'Four hidden topics per boss. A found weak point stays found.'],
       ['Phase 2', 'At 66% HP', 'Harder questions.'],
       ['Phase 3', 'At 33% HP', `A clock on every question: Recall ${TIMER.recall}s, Scenario ${TIMER.scenario}s, Put in order ${TIMER.order}s, Read the output ${TIMER.output}s, Calculate ${TIMER.calc}s.`],
       ['Aftershock', `${AFTERSHOCK_GAP} turns later`, 'A missed question comes back and has to be cleared.'],
@@ -282,7 +295,7 @@
       const range = bases.length > 1 ? `${Math.min(...bases)}-${Math.max(...bases)}` : bases[0];
       return `<span class="ccard ${cls} static" role="img" aria-label="${tier} card: ${types.map(t => TYPES[t].label).join(' and ')}, base damage ${range}">
         <span class="cc-face">
-          <span class="cc-top"><span class="cc-rating">${range}</span><span class="cc-unit">base</span></span>
+          <span class="cc-top"><span class="cc-rating${bases.length > 1 ? ' range' : ''}">${range}</span><span class="cc-unit">base</span></span>
           <span class="cc-pos">${tier}</span>
           <span class="cc-title">${types.map(t => esc(TYPES[t].label)).join('<br>')}</span>
         </span></span>`;
@@ -290,7 +303,11 @@
     show('guide', `
       <section class="manual">
         <div class="stack">
-          <section>
+          <section class="touch-only">
+            <h3>Controls</h3>
+            <p class="small dim">Tap a card to pick it, then tap an answer. On terminal questions, tap a line and then Flag line. On order questions, tap the steps in order and then Lock in order.</p>
+          </section>
+          <section class="controls">
             <h3>Controls</h3>
             <div class="keyrow"><span class="keys">${keys(['Q', 'E'])}</span><span>Previous and next tab</span></div>
             <div class="keyrow"><span class="keys">${keys(['↑', '↓'])}</span><span>Move through lists, answers and terminal lines</span></div>
@@ -338,7 +355,6 @@
             <div class="sb-cell sb-mid" id="sb-mid"><span class="sb-small" id="clock-label"></span><span class="sb-clock" id="clock"></span></div>
             <div class="sb-cell boss"><span class="sb-val" id="hptext"></span><span class="sb-code">${BOSS_CODE[boss.id]}</span></div>
             <div class="sb-cell sb-extra"><span class="sb-small">Streak</span><b id="streak"></b></div>
-            <div class="sb-bars" aria-hidden="true"><span class="sb-bar you"><span id="upbar"></span></span><span class="sb-bar boss"><span id="hpfill"></span></span></div>
           </div>
           <div class="hud-items" id="items"></div>
         </div>
@@ -373,9 +389,9 @@
 
   function hud() {
     $('#uptime').textContent = fmtUptime(run.nines).replace('%', '');
-    $('#upbar').style.width = Math.max(0, (run.nines - FLOOR_NINES) / (START_NINES - FLOOR_NINES) * 100) + '%';
+    $('#scoreboard .sb-cell.you').style.setProperty('--fill', Math.max(0, (run.nines - FLOOR_NINES) / (START_NINES - FLOOR_NINES) * 100) + '%');
     $('#hptext').textContent = Math.max(0, run.hp);
-    $('#hpfill').style.width = Math.max(0, run.hpFrac * 100) + '%';
+    $('#scoreboard .sb-cell.boss').style.setProperty('--fill', Math.max(0, run.hpFrac * 100) + '%');
     $('#phase').textContent = run.practice ? `Practice, phase ${run.phase}` : `Phase ${run.phase}`;
     if (!timer) {
       $('#clock-label').textContent = 'Turn';
@@ -391,7 +407,7 @@
       ? `<button class="item" id="it-pcap">Packet Capture <b>∞</b></button><button class="item" id="it-tac">TAC Case <b>∞</b></button>`
       : `<button class="item" id="it-pcap" ${it.pcap > 0 ? '' : 'disabled'}>Packet Capture <b>×${it.pcap}</b></button>
          <button class="item" id="it-tac" ${it.tac > 0 ? '' : 'disabled'}>TAC Case <b>×${it.tac}</b></button>
-         <span class="item passive">Reload <b>×${it.reload}</b></span>`;
+         <span class="item passive" title="Offered right after a miss">Reload <b>×${it.reload}</b></span>`;
     $('#it-pcap').addEventListener('click', usePcap);
     $('#it-tac').addEventListener('click', useTac);
     LHArena.update({ hpFrac: run.hpFrac, nines: run.nines, phase: run.phase, startNines: START_NINES, floorNines: FLOOR_NINES });
@@ -400,6 +416,7 @@
   function say(text, cls = '') {
     const b = $('#banner');
     if (!b) return;
+    if ($('#banner-text').textContent === text && b.className.includes(cls)) return;
     $('#banner-text').textContent = text;
     b.className = 'lower-third ' + cls;
     void b.offsetWidth;
@@ -415,14 +432,16 @@
     eventBand.t = setTimeout(() => { e.hidden = true; }, 1250);
   }
   function floater(text, cls) {
-    const sb = $(cls === 'hurt' ? '#scoreboard .sb-cell.you' : '#scoreboard .sb-cell.boss');
-    if (!sb) return;
+    const host = $('.arena-wrap');
+    if (!host) return;
+    $$('.floater', host).forEach(f => f.remove());
     const f = document.createElement('span');
     f.className = 'floater ' + cls;
     f.textContent = text;
-    sb.appendChild(f);
+    host.appendChild(f);
     setTimeout(() => f.remove(), 1500);
   }
+  const phaseLine = () => run.phase === 1 ? boss.lines.intro : run.phase === 2 ? boss.lines.phase2 : boss.lines.phase3;
 
   /* ---------- choose a card ---------- */
   function choose() {
@@ -430,6 +449,8 @@
     current = null;
     if (run.over) return results();
     hud();
+    $('.battle').classList.remove('wide');
+    say(phaseLine());
     const cards = run.draw();
     const forced = cards[0].aftershock;
     $('#console').innerHTML = `
@@ -440,19 +461,20 @@
         const weak = run.isWeak(q) && run.revealed.has(q.obj);
         const tier = k.aftershock ? 'special' : TIER_CLASS[t.tier];
         const dmg = run.damageFor(q, weak);
-        return `<button class="ccard ${tier}" data-i="${i}" aria-label="${esc(q.title)}. ${t.label}, ${dmg} damage, difficulty ${q.diff}.">
+        return `<button class="ccard ${tier}" data-i="${i}" aria-label="${esc(q.title)}. ${t.label}, ${dmg} damage, difficulty ${q.diff}${weak ? ', weak point' : ''}.">
           <span class="cc-face">
-            ${weak ? '<span class="cc-badge">Weak pt</span>' : ''}
             <span class="cc-top"><span class="cc-rating">${dmg}</span><span class="cc-unit">dmg</span></span>
-            <span class="cc-pos">${TYPE_CODE[q.type]}</span>
-            <span class="cc-title">${esc(q.title)}</span>
+            <span class="cc-pos">${TYPE_SHORT[q.type]}</span>
+            ${weak ? '<span class="cc-badge inline">Weak point</span>' : ''}
+            <span class="cc-title">${titleHtml(q.title)}</span>
             <span class="cc-obj">${q.obj} ${esc(objName(q.obj))}</span>
-            <span class="cc-stats"><span><b>${q.diff}</b>LVL</span><span><b>${yourRating(q.obj)}</b>YOU</span></span>
+            <span class="cc-stats"><span><b>${q.diff}</b>Diff</span><span><b>${yourRating(q.obj)}</b>You</span></span>
           </span>
         </button>`;
       }).join('')}</div>`;
-    $$('#console .ccard').forEach(b => b.addEventListener('click', () => { sfx.select(); ask(cards[+b.dataset.i]); }));
+    $$('#console .ccard').forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; sfx.select(); ask(cards[+b.dataset.i]); }));
     $('#console').scrollTop = 0;
+    markSwap();
     $('#console .ccard').focus({ preventScroll: true });
     setPrompts([[cards.length > 1 ? ['1', '2', '3'] : ['1'], 'Pick card'], [['←', '→'], 'Move'], ['↵', 'Select']]);
   }
@@ -471,6 +493,8 @@
       <p class="prompt-text">${esc(q.prompt)}</p>
       <div id="qbody"></div>
       <p id="hint" class="tac" hidden></p>`;
+    $('.battle').classList.toggle('wide', q.type === 'output');
+    markSwap();
     renderBody();
     const limit = run.timeLimit(q);
     if (limit) startTimer(limit); else stopTimer();
@@ -481,7 +505,9 @@
       calc: [['↵', 'Submit']],
       order: [[['↑', '↓'], 'Move'], ['↵', 'Place step'], ['L', 'Lock in']]
     }[q.type];
-    setPrompts([...legend, ['X', 'Packet Capture'], ['H', 'TAC Case']]);
+    // Only advertise keys that work here: the answer box takes every letter on Calculate questions.
+    const items = q.type === 'calc' ? [] : (q.choices || q.type === 'output') ? [['X', 'Packet Capture'], ['H', 'TAC Case']] : [['H', 'TAC Case']];
+    setPrompts([...legend, ...items]);
   }
 
   function renderBody() {
@@ -491,13 +517,14 @@
       body.innerHTML = `<div class="list">${current.order.map((oi, n) => `
         <button class="choice" data-oi="${oi}" ${eliminated.has(oi) ? 'disabled aria-label="Removed by Packet Capture"' : ''}>
           <span class="slot-key">${'ABCD'[n]}</span><span>${esc(q.choices[oi].t)}</span></button>`).join('')}</div>`;
-      $$('.choice', body).forEach(b => b.addEventListener('click', () => submit(+b.dataset.oi === q.answer, { pick: +b.dataset.oi })));
+      $$('.choice', body).forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; submit(+b.dataset.oi === q.answer, { pick: +b.dataset.oi }); }));
       const first = $('.choice:not(:disabled)', body); if (first) first.focus({ preventScroll: true });
     } else if (q.type === 'output') {
       body.innerHTML = terminal(q, { selectable: true }) +
         `<div class="row"><button class="btn primary" id="flag" ${current.picked === null ? 'disabled' : ''}>Flag line</button></div>`;
       if (current.picked !== null) { const sel = $(`.tline[data-i="${current.picked}"]`, body); if (sel) sel.classList.add('sel'); }
-      $$('button.tline', body).forEach(b => b.addEventListener('click', () => {
+      $$('button.tline', body).forEach(b => b.addEventListener('click', e => {
+        if (fresh(e)) return;
         $$('.tline.sel', body).forEach(x => x.classList.remove('sel'));
         b.classList.add('sel');
         current.picked = +b.dataset.i;
@@ -505,6 +532,7 @@
         sfx.select();
       }));
       $('#flag').addEventListener('click', flag);
+      focusFirst('button.tline.sel', 'button.tline');
     } else if (q.type === 'calc') {
       body.innerHTML = `
         <form class="calc" id="calc" autocomplete="off">
@@ -539,11 +567,11 @@
             ? `<div class="slot-empty"><span class="slot-key">${n + 1}</span>Empty</div>`
             : `<button class="seq-item" data-i="${i}" aria-label="Step ${n + 1}: ${esc(q.items[i])}. Activate to take it back."><span class="slot-key">${n + 1}</span><span>${esc(q.items[i])}</span></button>`;
         }).join('')}</div>
-        ${left.length ? `<span class="label">Steps to place</span>
-        <div class="list">${left.map(i => `<button class="pool-item" data-i="${i}">${esc(q.items[i])}</button>`).join('')}</div>` : ''}
+        ${left.length ? `<div class="pool-group"><span class="label">Steps to place</span>
+        <div class="list">${left.map(i => `<button class="pool-item" data-i="${i}">${esc(q.items[i])}</button>`).join('')}</div></div>` : ''}
         <div class="row"><button class="btn primary" id="commit" ${current.seq.length === q.items.length ? '' : 'disabled'}>Lock in order</button></div>`;
-      $$('.pool-item', body).forEach(b => b.addEventListener('click', () => { current.seq.push(+b.dataset.i); sfx.select(); renderBody(); focusFirst('.pool-item', '#commit'); }));
-      $$('.seq-item', body).forEach(b => b.addEventListener('click', () => { current.seq = current.seq.filter(x => x !== +b.dataset.i); renderBody(); focusFirst('.pool-item'); }));
+      $$('.pool-item', body).forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; current.seq.push(+b.dataset.i); sfx.select(); renderBody(); focusFirst('.pool-item', '#commit'); }));
+      $$('.seq-item', body).forEach(b => b.addEventListener('click', e => { if (fresh(e)) return; current.seq = current.seq.filter(x => x !== +b.dataset.i); renderBody(); focusFirst('.pool-item'); }));
       $('#commit').addEventListener('click', lockIn);
       if (!document.activeElement || document.activeElement === document.body) focusFirst('.pool-item');
     }
@@ -582,6 +610,14 @@
     if (eliminated.has(current.picked)) current.picked = null;
     sfx.select();
     renderBody(); hud();
+    refocus();
+  }
+  function refocus() {
+    const q = current && current.q;
+    if (!q) return;
+    if (q.type === 'output') focusFirst('button.tline.sel', 'button.tline');
+    else if (q.type === 'order') focusFirst('.pool-item', '#commit');
+    else if (q.choices) focusFirst('.choice');
   }
   function useTac() {
     if (!current || current.done || hintShown) return;
@@ -591,7 +627,8 @@
     if (timer) deadline -= 10000;
     if (!run.practice) sfx.alarm();
     renderBody(); hud();
-    if (run.over) { stopTimer(); results(); }
+    if (run.over) { stopTimer(); results(); return; }
+    refocus();
   }
   function flash(msg) { const h = $('#hint'); if (h) { h.hidden = false; h.textContent = msg; } }
 
@@ -632,7 +669,7 @@
     if (correct) {
       out.crit ? sfx.crit() : sfx.relay();
       LHArena.hit(out.crit);
-      eventBand(out.crit ? 'Critical hit' : 'Link up', out.crit ? 'crit' : '');
+      eventBand(out.crit ? 'Weak point hit' : 'Link up', out.crit ? 'crit' : '');
       floater('−' + out.damage, out.crit ? 'crit' : 'dmg');
     } else {
       if (!run.practice) sfx.alarm();
@@ -675,7 +712,7 @@
       const why = wrongPick && q.lineWhy && q.lineWhy[detail.pick];
       review = terminal(q, { marks }) + (why ? `<p class="small dim"><b>The line you flagged:</b> ${esc(why)}</p>` : '');
     } else if (q.type === 'calc') {
-      review = `<p class="calc-review"><span>You typed <code>${esc(detail.typed !== undefined ? detail.typed : 'nothing')}</code></span><span>Answer <code>${esc(q.answer)}</code></span></p>`;
+      review = `<p class="calc-review">${detail.typed !== undefined ? `<span>You typed <code>${esc(detail.typed)}</code></span>` : '<span>No answer before the clock ran out.</span>'}<span>Answer <code>${esc(q.answer)}</code></span></p>`;
     } else if (q.type === 'order') {
       const seq = detail.seq || [];
       review = `<ul class="review">${q.items.map((it, n) => {
@@ -686,8 +723,8 @@
 
     const canReload = !correct && !run.practice && run.items.reload > 0 && run.undo && !run.over;
     const band = correct
-      ? `<span class="state ${out.crit ? 'crit' : 'up'}">${out.crit ? 'Critical hit' : 'Link up'}</span><span class="result-meta">${out.damage} damage.${run.streak > 1 ? ` Your next hit does ×${run.mult.toFixed(1)}.` : ''}</span>`
-      : `<span class="state down">${detail.timeout ? 'Out of time' : 'Link down'}</span><span class="result-meta">${run.practice ? 'Practice, so no uptime lost.' : `Uptime ${fmtUptime(run.nines)}.`} It returns as an aftershock.</span>`;
+      ? `<span class="state ${out.crit ? 'crit' : 'up'}">${out.crit ? 'Weak point hit' : 'Link up'}</span><span class="result-meta">${out.damage} damage.${run.streak > 1 ? ` Your next hit does ×${run.mult.toFixed(1)}.` : ''}</span>`
+      : `<span class="state down">${detail.timeout ? 'Out of time' : 'Link down'}</span><span class="result-meta">${run.practice ? 'Practice, so no uptime lost.' : `Uptime ${fmtUptime(run.nines)}.`}${run.over ? '' : ' It returns as an aftershock.'}</span>`;
     $('#console').innerHTML = `
       <div class="result-band">${band}</div>
       <p class="prompt-text small">${esc(q.prompt)}</p>
@@ -698,7 +735,7 @@
         ${canReload ? `<button class="btn" id="reload">Undo miss (Reload ×${run.items.reload})</button>` : ''}
       </div>`;
     $('#console').scrollTop = 0;
-    $('#next').focus({ preventScroll: true });
+    focusInView($('#next'));
     $('#next').addEventListener('click', () => run.over ? results() : choose());
     if (canReload) $('#reload').addEventListener('click', doReload);
     setPrompts(canReload ? [['↵', run.over ? 'Full time' : 'Continue'], ['R', 'Undo miss']] : [['↵', run.over ? 'Full time' : 'Continue']]);
@@ -765,7 +802,7 @@
           ${fact('Answers', s.correct, 'Right', s.answered - s.correct, 'Wrong', s.correct, s.answered - s.correct)}
           ${fact('Boss HP', dealt, 'Dealt', Math.max(0, run.hp), 'Left', dealt, Math.max(0, run.hp))}
           ${practice ? '' : fact('Uptime budget', `${keptPct}%`, 'Kept', `${100 - keptPct}%`, 'Spent', keptPct, 100 - keptPct)}
-          ${fact('Hits', s.crits, 'Critical', s.correct - s.crits, 'Normal', s.crits, s.correct - s.crits)}
+          ${single('Weak point hits', s.crits, `of ${s.correct} hits`, s.correct ? s.crits / s.correct : 0, '', '')}
           ${single('Accuracy', `${Math.round(s.accuracy * 100)}%`, `${s.correct} of ${s.answered}`, s.accuracy, '', '')}
           ${single('Best streak', s.maxStreak, 'In a row', s.answered ? s.maxStreak / s.answered : 0, '', '')}
         </div>
@@ -788,7 +825,7 @@
     $('#other').addEventListener('click', () => setup(boss.id, practice ? 'run' : 'practice'));
     $('#m').addEventListener('click', mastery);
     $('#r').addEventListener('click', home);
-    $('#again').focus({ preventScroll: true });
+    focusInView($('#again'));
   }
 
   /* ================================================================
@@ -812,19 +849,19 @@
         <div class="attr-side">
           <span class="ccard static ${ovr === null ? 'locked' : ovr >= 80 ? 'gold' : ovr >= 50 ? 'silver' : 'bronze'}" role="img" aria-label="Overall rating ${ovr === null ? 'not rated yet' : ovr}">
             <span class="cc-face">
-              <span class="cc-top"><span class="cc-rating">${ovr === null ? 'NR' : ovr}</span><span class="cc-unit">OVR</span></span>
+              <span class="cc-top"><span class="cc-rating">${ovr === null ? 'New' : ovr}</span><span class="cc-unit">OVR</span></span>
               <span class="cc-art"><span class="crest">NOC</span></span>
               <span class="cc-name">On-call</span>
-              <span class="cc-stats"><span><b>${tested}</b>TST</span><span><b>${solid}</b>SLD</span><span><b>${wins}</b>WIN</span></span>
+              <span class="cc-stats"><span><b>${tested}</b>Tested</span><span><b>${solid}</b>Solid</span><span><b>${wins}</b>Wins</span></span>
             </span>
           </span>
           <div>
-            <p class="pad-bottom">Each topic is rated 0 to 99 from your last eight answers on it. Below ${MIN_SAMPLE} answers it shows your count instead.</p>
+            <p class="pad-bottom">Each topic is rated 0 to 99 from your last eight answers on it. With fewer than three answers it shows your count instead.</p>
             <div class="legend">
               <span class="rbadge up">80</span><span>Solid: 80 or more</span>
               <span class="rbadge degraded">50</span><span>Shaky: 50 to 79</span>
               <span class="rbadge down">30</span><span>Needs work: under 50</span>
-              <span class="rbadge few">1/2</span><span>Fewer than ${MIN_SAMPLE} answers</span>
+              <span class="rbadge few">1/2</span><span>Fewer than three answers</span>
               <span class="rbadge none"></span><span>Not tested</span>
             </div>
           </div>
@@ -841,7 +878,7 @@
             <h3>Other domains</h3>
             ${locked.map(d => {
               const b = DATA.bosses.find(x => x.domain === d.id);
-              return `<details class="dom-row"><summary><span class="oid">${d.id}</span><span class="dname">${esc(d.name)}</span><span class="small dim">${d.weight}%${b ? `, ${esc(b.name)}` : ''}</span><span class="lock">Locked</span></summary>
+              return `<details class="dom-row"><summary><span class="oid">${d.id}</span><span class="dname">${esc(d.name)}</span><span class="small dim">${d.weight}%${b ? `, ${esc(b.name)}` : ''}</span><span class="lock-chip">Locked</span></summary>
                 <ul class="obj-list">${d.objectives.map(objRow).join('')}</ul></details>`;
             }).join('')}
           </section>
@@ -857,7 +894,7 @@
   }
 
   /* ---------- keyboard: controller-style ---------- */
-  const LIST_GROUPS = ['.choice', '.pool-item, .seq-item', 'button.tline', 'button.rule, #kickoff, #back', '.tile', '#console .ccard', '.roster button.ccard'];
+  const LIST_GROUPS = ['.choice', '.seq-item, .pool-item, #commit', 'button.tline, #flag', 'button.rule, #kickoff, #back', '.tile, .roster button.ccard', '#console .ccard', '.dom-row summary', '#console .row .btn'];
   function moveFocus(dir) {
     const a = document.activeElement;
     const group = a && LIST_GROUPS.find(g => a.matches(g));
@@ -882,7 +919,7 @@
       sfx.select(); go(next); e.preventDefault(); return;
     }
     if (k === 'Escape' && scr !== 'battle' && scr !== 'home') { home(); e.preventDefault(); return; }
-    if (scr === 'setup' && (k === 'ArrowLeft' || k === 'ArrowRight')) { $('#mode').click(); e.preventDefault(); return; }
+    if (scr === 'setup' && (k === 'ArrowLeft' || k === 'ArrowRight')) { sfx.select(); setup('mask', setup.mode === 'practice' ? 'run' : 'practice'); e.preventDefault(); return; }
     if (k === 'ArrowDown' || k === 'ArrowUp') { if (moveFocus(k === 'ArrowDown' ? 1 : -1)) e.preventDefault(); return; }
     if (scr !== 'battle') return;
     if ((k === 'ArrowLeft' || k === 'ArrowRight') && document.activeElement && document.activeElement.matches('#console .ccard')) { moveFocus(k === 'ArrowRight' ? 1 : -1); e.preventDefault(); return; }

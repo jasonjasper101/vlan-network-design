@@ -241,7 +241,7 @@
     {
       "id": "nf-021", "obj": "1.10", "type": "output", "diff": 2,
       "title": "Windows host with no network",
-      "prompt": "A Windows user can't reach anything, not even the gateway. Click the line that shows the host never got a DHCP lease.",
+      "prompt": "A Windows user can't reach anything, not even the gateway. Flag the line that shows the host never got a DHCP lease.",
       "terminal": {
         "prompt": "C:\\>",
         "cmd": "ipconfig",
@@ -269,7 +269,7 @@
     {
       "id": "nf-022", "obj": "1.4", "type": "output", "diff": 2,
       "title": "Marketing gateway unreachable",
-      "prompt": "Marketing hosts (10.10.10.128/26) can't ping their gateway 10.10.10.190. The cable tests good. Click the line that shows the fault.",
+      "prompt": "Marketing hosts (10.10.10.128/26) can't ping their gateway 10.10.10.190. The cable tests good. Flag the line that shows the fault.",
       "terminal": {
         "prompt": "R1#",
         "cmd": "show ip interface brief",
@@ -391,7 +391,7 @@
     {
       "id": "nf-031", "obj": "1.13", "type": "output", "diff": 2,
       "title": "Find PC-C in the MAC table",
-      "prompt": "PC-C (MAC 0050.7966.6803) should be patched directly into Fa0/4 on this switch. Click the line that shows it is actually reached through the uplink to another switch.",
+      "prompt": "PC-C (MAC 0050.7966.6803) should be patched directly into Fa0/4 on this switch. Flag the line that shows it is actually reached through the uplink to another switch.",
       "terminal": {
         "prompt": "SW-MKT#",
         "cmd": "show mac address-table dynamic",
@@ -514,7 +514,7 @@
     {
       "id": "nf-039", "obj": "1.8", "type": "output", "diff": 2,
       "title": "Spot the EUI-64 address",
-      "prompt": "Click the line that proves the global unicast address was built with EUI-64.",
+      "prompt": "Flag the line that proves the global unicast address was built with EUI-64.",
       "terminal": {
         "prompt": "R1#",
         "cmd": "show ipv6 interface gigabitEthernet 0/0",
@@ -567,7 +567,7 @@
     {
       "id": "nf-043", "obj": "1.4", "type": "output", "diff": 3,
       "title": "Duplex mismatch on Fa0/24",
-      "prompt": "Users behind SW-HR Fa0/24 report a slow, unreliable link. The far end is hard-set to full duplex. Click the line that proves a duplex mismatch from this side.",
+      "prompt": "Users behind SW-HR Fa0/24 report a slow, unreliable link. The far end is hard-set to full duplex. Flag the line that proves a duplex mismatch from this side.",
       "terminal": {
         "prompt": "SW-HR#",
         "cmd": "show interfaces fastEthernet 0/24",
@@ -599,7 +599,7 @@
     {
       "id": "nf-044", "obj": "1.9", "type": "output", "diff": 3,
       "title": "Solicited-node group",
-      "prompt": "Click the multicast group this interface joined so neighbors can resolve its addresses with NDP.",
+      "prompt": "Flag the multicast group this interface joined so neighbors can resolve its addresses with NDP.",
       "terminal": {
         "prompt": "R1#",
         "cmd": "show ipv6 interface gigabitEthernet 0/0",
@@ -629,7 +629,7 @@
     {
       "id": "nf-045", "obj": "1.10", "type": "output", "diff": 3,
       "title": "Linux host, wrong boundary",
-      "prompt": "This Linux host belongs in Marketing (10.10.10.128/26). It can reach its gateway 10.10.10.190 but not Sales hosts in 10.10.10.0/25. Click the line that explains why.",
+      "prompt": "This Linux host belongs in Marketing (10.10.10.128/26). It can reach its gateway 10.10.10.190 but not Sales hosts in 10.10.10.0/25. Flag the line that explains why.",
       "terminal": {
         "prompt": "$ ",
         "cmd": "ip addr show eth0",

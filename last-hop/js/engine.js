@@ -228,7 +228,9 @@
       if (this.items.pcap <= 0) return null;
       let wrong;
       if (q.type === 'output') {
-        wrong = q.terminal.lines.map((l, i) => i).filter(i => !q.answer.includes(i) && q.terminal.lines[i].trim());
+        // Never strike the first line: it is the header or the interface status line the rest is read against.
+        const first = q.terminal.lines.findIndex(l => l.trim());
+        wrong = q.terminal.lines.map((l, i) => i).filter(i => i !== first && !q.answer.includes(i) && q.terminal.lines[i].trim());
       } else if (q.choices) {
         wrong = q.choices.map((_, i) => i).filter(i => i !== q.answer);
       } else return null;
